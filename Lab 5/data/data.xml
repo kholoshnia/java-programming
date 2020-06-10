@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workers>
+	<element>
+		<key>4321</key>
+		<id>4839928</id>
+		<name>Иван Петрович Петроввич</name>
+		<creationDate>28-02-2020</creationDate>
+		<coordinates>
+			<x>25.0</x>
+			<y>40.0</y>
+		</coordinates>
+		<salary>70100.0</salary>
+		<startDate>20-12-2015 20:20:20</startDate>
+		<endDate>20-12-2021 20:20:20</endDate>
+		<status>RECOMMENDED_FOR_PROMOTION</status>
+		<person>
+			<eyeColor>BROWN</eyeColor>
+			<hairColor>BLUE</hairColor>
+			<location>
+				<x>25</x>
+				<y>35</y>
+				<z>45.0</z>
+				<name>Moscow</name>
+			</location>
+			<passportID>Asdas ASKDAS 91032</passportID>
+		</person>
+	</element>
+	<element>
+		<key>12345</key>
+		<id>93340639</id>
+		<name>Иван Петрович Сидоров</name>
+		<creationDate>28-02-2020</creationDate>
+		<coordinates>
+			<x>25.0</x>
+			<y>50.0</y>
+		</coordinates>
+		<salary>15050.0</salary>
+		<startDate>20-12-2014 20:20:20</startDate>
+		<endDate>20-12-2020 20:20:20</endDate>
+		<status>FIRED</status>
+		<person>
+			<eyeColor>BROWN</eyeColor>
+			<hairColor>WHITE</hairColor>
+			<location>
+				<x>25</x>
+				<y>35</y>
+				<z>45.0</z>
+				<name>Moscow</name>
+			</location>
+			<passportID>ASJDAKS asdasd 91032</passportID>
+		</person>
+	</element>
+	<element>
+		<key>123</key>
+		<id>86006201</id>
+		<name>Иван Иванович Иван</name>
+		<creationDate>28-02-2020</creationDate>
+		<coordinates>
+			<x>20.0</x>
+			<y>30.0</y>
+		</coordinates>
+		<salary>2000.0</salary>
+		<startDate>20-12-2020 20:20:20</startDate>
+		<endDate>20-12-2020 20:20:20</endDate>
+		<status>null</status>
+		<person>
+			<eyeColor>BLUE</eyeColor>
+			<hairColor>BROWN</hairColor>
+			<location>
+				<x>20</x>
+				<y>20</y>
+				<z>20.0</z>
+				<name>St. Petersburg</name>
+			</location>
+			<passportID>1234567890</passportID>
+		</person>
+	</element>
+	<element>
+		<key>1234</key>
+		<id>11039130</id>
+		<name>Иван Петрович Петров</name>
+		<creationDate>28-02-2020</creationDate>
+		<coordinates>
+			<x>25.0</x>
+			<y>40.0</y>
+		</coordinates>
+		<salary>50000.0</salary>
+		<startDate>20-12-2015 20:20:20</startDate>
+		<endDate>20-12-2020 20:20:20</endDate>
+		<status>RECOMMENDED_FOR_PROMOTION</status>
+		<person>
+			<eyeColor>BROWN</eyeColor>
+			<hairColor>BLUE</hairColor>
+			<location>
+				<x>25</x>
+				<y>35</y>
+				<z>45.0</z>
+				<name>Moscow</name>
+			</location>
+			<passportID>ASJDAKS ASKDAS 91032</passportID>
+		</person>
+	</element>
+	<element>
+		<key>321</key>
+		<id>153830424</id>
+		<name>Иван Иванович Петров</name>
+		<creationDate>28-02-2020</creationDate>
+		<coordinates>
+			<x>25.0</x>
+			<y>35.0</y>
+		</coordinates>
+		<salary>2005.0</salary>
+		<startDate>20-12-2010 20:20:20</startDate>
+		<endDate>20-12-2020 20:20:20</endDate>
+		<status>FIRED</status>
+		<person>
+			<eyeColor>BLUE</eyeColor>
+			<hairColor>WHITE</hairColor>
+			<location>
+				<x>20</x>
+				<y>30</y>
+				<z>40.0</z>
+				<name>St. Petersburg</name>
+			</location>
+			<passportID>123456789010</passportID>
+		</person>
+	</element>
+	<element>
+		<key>12</key>
+		<id>58838011</id>
+		<name>asd</name>
+		<creationDate>25-02-2020</creationDate>
+		<coordinates>
+			<x>0.0</x>
+			<y>20.0</y>
+		</coordinates>
+		<salary>2000.0</salary>
+		<startDate>20-12-2020 20:20:20</startDate>
+		<endDate>20-12-2020 20:20:20</endDate>
+		<status>FIRED</status>
+		<person>
+			<eyeColor>null</eyeColor>
+			<hairColor>BLUE</hairColor>
+			<location>
+				<x>20</x>
+				<y>0</y>
+				<z>20.0</z>
+				<name>null</name>
+			</location>
+			<passportID>asdasdasdasd</passportID>
+		</person>
+	</element>
+	<element>
+		<key>132</key>
+		<id>51744082</id>
+		<name>asd</name>
+		<creationDate>22-02-2020</creationDate>
+		<coordinates>
+			<x>0.0</x>
+			<y>20.0</y>
+		</coordinates>
+		<salary>null</salary>
+		<startDate>20-12-2020 20:20:20</startDate>
+		<endDate>null</endDate>
+		<status>null</status>
+		<person>
+			<eyeColor>BLUE</eyeColor>
+			<hairColor>BLUE</hairColor>
+			<location>
+				<x>20</x>
+				<y>20</y>
+				<z>20.0</z>
+				<name>asdasdasd</name>
+			</location>
+			<passportID>alksd;alksjd;alksfd</passportID>
+		</person>
+	</element>
+</workers>

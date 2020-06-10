@@ -1,0 +1,7 @@
+execute_script /Users/vadim/Documents/GitHub/java-programming/Lab 5/data/workers/1.txt
+execute_script /Users/vadim/Documents/GitHub/java-programming/Lab 5/data/workers/2.txt
+execute_script /Users/vadim/Documents/GitHub/java-programming/Lab 5/data/workers/3.txt
+execute_script /Users/vadim/Documents/GitHub/java-programming/Lab 5/data/workers/4.txt
+execute_script /Users/vadim/Documents/GitHub/java-programming/Lab 5/data/workers/5.txt
+save
+show

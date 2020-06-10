@@ -1,0 +1,127 @@
+clear
+info
+show
+help
+
+insert_key 236
+workerName=20
+salary=20
+coordinatesX=20
+    coordinatesY =           20
+startDate="20-12-2020 20:20:20"
+endDate="20-12-2020             20:20:20"
+status=fired
+person=included
+            passportID=123123 12313123123123
+eyeColor=black
+hairColor=black
+locationX=20
+            locationY=30
+locationZ=50
+locationName = St. Petersburg
+
+show
+undo
+show
+redo
+show
+undo
+redo
+
+update_id 1
+workerName="aasdas as"
+salary=20000
+coordinatesX=200
+coordinatesY=200
+startDate=20-12-2025 20:20:20
+endDate     =20-12-2025 20:20:20
+status=hired
+passportID=202002alksfjalskdlasd
+eyeColor=black
+hairColor=black
+locationX=60
+locationY=      400
+locationZ=10201
+locationName=       "Asdasd         "
+
+show
+undo
+show
+redo
+show
+undo
+redo
+
+replace_if_lower 236
+workerName=20
+salary=10
+coordinatesX=20
+    coordinatesY =           20
+startDate="20-12-2020 20:20:20"
+endDate="20-12-2020             20:20:20"
+status=fired
+person=included
+            passportID=123123 12313123123123
+eyeColor=black
+hairColor=black
+locationX=20
+            locationY=30
+locationZ=50
+locationName = St. Petersburg
+
+show
+undo
+show
+redo
+show
+undo
+redo
+
+remove_key 236
+
+show
+undo
+show
+redo
+show
+
+undo
+redo
+
+undo
+show
+
+remove_lower
+workerName=20
+salary=5
+coordinatesX=20
+    coordinatesY =           20
+startDate="20-12-2020 20:20:20"
+endDate=   "20-12-2020             20:20:20"
+status=fired
+person=null
+
+show
+undo
+show
+redo
+show
+undo
+redo
+
+history
+clear_history
+history
+undo
+history
+redo
+history
+
+help
+info
+show
+save
+print_ascending
+min_by_name
+count_less_than_start_date '20-12-2025 20:20:20'
+exit
