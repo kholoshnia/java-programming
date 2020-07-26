@@ -1,0 +1,24 @@
+add
+    worker:included
+    workerSalary:1
+    workerStatus:fired
+    workerStartDate:2020-07-24T21:31:53.771+03:00[Europe/Moscow]
+    workerEndDate:2020-07-24T21:31:53.771+03:00[Europe/Moscow]
+    coordinates:included
+        coordinatesX:1
+        coordinatesY:1
+        coordinatesZ:1
+        person:included
+            personName:asd
+            personPassportId:29131092391
+            location:included
+                locationAddress:asd 192 20393
+                locationLatitude:1
+                locationLongitude:1
+
+info
+show
+info
+help
+
+show
