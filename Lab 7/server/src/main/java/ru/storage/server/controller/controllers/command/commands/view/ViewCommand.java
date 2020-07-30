@@ -6,8 +6,11 @@ import org.apache.logging.log4j.Logger;
 import ru.storage.common.ArgumentMediator;
 import ru.storage.server.controller.controllers.command.Command;
 import ru.storage.server.controller.services.format.date.DateFormat;
+import ru.storage.server.controller.services.format.eyeColor.EyeColorFormat;
+import ru.storage.server.controller.services.format.hairColor.HairColorFormat;
 import ru.storage.server.controller.services.format.number.NumberFormat;
 import ru.storage.server.controller.services.format.status.StatusFormat;
+import ru.storage.server.controller.services.parser.Parser;
 import ru.storage.server.model.domain.entity.entities.worker.Coordinates;
 import ru.storage.server.model.domain.entity.entities.worker.Worker;
 import ru.storage.server.model.domain.entity.entities.worker.person.Location;
@@ -19,140 +22,153 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 public abstract class ViewCommand extends Command {
-  private static final String WORKER_PREFIX_PATTERN = "%s:";
-  private static final String COORDINATES_PREFIX_PATTERN = "\t%s:";
-  private static final String PERSON_PREFIX_PATTERN = "\t\t%s:";
-  private static final String LOCATION_PREFIX_PATTERN = "\t\t\t%s:";
-  private static final String WORKER_PATTERN = "\t%s: %s";
-  private static final String COORDINATES_PATTERN = "\t\t%s: %s";
-  private static final String PERSON_PATTERN = "\t\t\t%s: %s";
-  private static final String LOCATION_PATTERN = "\t\t\t\t%s: %s";
+  private static final Logger logger = LogManager.getLogger(ViewCommand.class);
+
+  private static final String NAME_PATTERN = "%s:";
+  private static final String EMPTY_PATTERN = "\t%s:";
+  private static final String PREFIX_PATTERN = "\t%s: %s";
 
   protected final Locale locale;
   protected final WorkerRepository workerRepository;
+  protected final Parser parser;
   protected final DateFormat dateFormat;
   protected final NumberFormat numberFormat;
   protected final StatusFormat statusFormat;
+  protected final EyeColorFormat eyeColorFormat;
+  protected final HairColorFormat hairColorFormat;
   protected final NumberFormat currencyFormat;
 
-  protected final String WORKER_PREFIX;
-  protected final String WORKER_ID_PREFIX;
-  protected final String WORKER_OWNER_ID_PREFIX;
-  protected final String WORKER_CREATION_DATE_PREFIX;
-  protected final String WORKER_SALARY_PREFIX;
-  protected final String WORKER_STATUS_PREFIX;
-  protected final String WORKER_START_DATE_PREFIX;
-  protected final String WORKER_END_DATE_PREFIX;
-  protected final String COORDINATES_PREFIX;
-  protected final String COORDINATES_OWNER_ID_PREFIX;
-  protected final String COORDINATES_ID_PREFIX;
-  protected final String COORDINATES_X_PREFIX;
-  protected final String COORDINATES_Y_PREFIX;
-  protected final String COORDINATES_Z_PREFIX;
-  protected final String PERSON_PREFIX;
-  protected final String PERSON_ID_PREFIX;
-  protected final String PERSON_OWNER_ID_PREFIX;
-  protected final String PERSON_NAME_PREFIX;
-  protected final String PERSON_PASSWORD_ID_PREFIX;
-  protected final String LOCATION_PREFIX;
-  protected final String LOCATION_ID_PREFIX;
-  protected final String LOCATION_OWNER_ID_PREFIX;
-  protected final String LOCATION_ADDRESS_PREFIX;
-  protected final String LOCATION_LATITUDE_PREFIX;
-  protected final String LOCATION_LONGITUDE_PREFIX;
+  protected final String workerPrefix;
+  protected final String workerIdPrefix;
+  protected final String workerOwnerIdPrefix;
+  protected final String workerKeyPrefix;
+  protected final String workerNamePrefix;
+  protected final String workerSalaryPrefix;
+  protected final String workerStartDatePrefix;
+  protected final String workerEndDatePrefix;
+  protected final String workerStatusPrefix;
 
-  private final Logger logger;
+  protected final String coordinatesPrefix;
+  protected final String coordinatesIdPrefix;
+  protected final String coordinatesOwnerIdPrefix;
+  protected final String coordinatesXPrefix;
+  protected final String coordinatesYPrefix;
+
+  protected final String personPrefix;
+  protected final String personIdPrefix;
+  protected final String personOwnerIdPrefix;
+  protected final String personPassportIdPrefix;
+  protected final String personEyeColorPrefix;
+  protected final String personHairColorPrefix;
+
+  protected final String locationPrefix;
+  protected final String locationIdPrefix;
+  protected final String locationOwnerIdPrefix;
+  protected final String locationXPrefix;
+  protected final String locationYPrefix;
+  protected final String locationZPrefix;
+  protected final String locationNamePrefix;
 
   public ViewCommand(
       Configuration configuration,
       ArgumentMediator argumentMediator,
       Map<String, String> arguments,
       Locale locale,
-      WorkerRepository workerRepository) {
+      WorkerRepository workerRepository,
+      Parser parser) {
     super(configuration, argumentMediator, arguments);
-    logger = LogManager.getLogger(ViewCommand.class);
     this.locale = locale;
     this.workerRepository = workerRepository;
+    this.parser = parser;
     numberFormat = NumberFormat.getNumberInstance(locale);
     dateFormat = DateFormat.getDateInstance(locale);
     statusFormat = StatusFormat.getStatusInstance(locale);
+    eyeColorFormat = EyeColorFormat.getEyeColorInstance(locale);
+    hairColorFormat = HairColorFormat.getHairColorInstance(locale);
     currencyFormat = NumberFormat.getCurrencyInstance(locale);
 
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.ViewCommand", locale);
 
-    WORKER_PREFIX = resourceBundle.getString("prefixes.worker");
-    WORKER_ID_PREFIX = resourceBundle.getString("prefixes.worker.id");
-    WORKER_OWNER_ID_PREFIX = resourceBundle.getString("prefixes.worker.ownerId");
-    WORKER_CREATION_DATE_PREFIX = resourceBundle.getString("prefixes.worker.creationDate");
-    WORKER_SALARY_PREFIX = resourceBundle.getString("prefixes.worker.salary");
-    WORKER_STATUS_PREFIX = resourceBundle.getString("prefixes.worker.status");
-    WORKER_START_DATE_PREFIX = resourceBundle.getString("prefixes.worker.startDate");
-    WORKER_END_DATE_PREFIX = resourceBundle.getString("prefixes.worker.endDate");
-    COORDINATES_PREFIX = resourceBundle.getString("prefixes.coordinates");
-    COORDINATES_ID_PREFIX = resourceBundle.getString("prefixes.coordinates.Id");
-    COORDINATES_OWNER_ID_PREFIX = resourceBundle.getString("prefixes.coordinates.ownerId");
-    COORDINATES_X_PREFIX = resourceBundle.getString("prefixes.coordinates.x");
-    COORDINATES_Y_PREFIX = resourceBundle.getString("prefixes.coordinates.y");
-    COORDINATES_Z_PREFIX = resourceBundle.getString("prefixes.coordinates.z");
-    PERSON_PREFIX = resourceBundle.getString("prefixes.person");
-    PERSON_ID_PREFIX = resourceBundle.getString("prefixes.person.id");
-    PERSON_OWNER_ID_PREFIX = resourceBundle.getString("prefixes.person.ownerId");
-    PERSON_NAME_PREFIX = resourceBundle.getString("prefixes.person.name");
-    PERSON_PASSWORD_ID_PREFIX = resourceBundle.getString("prefixes.person.passwordId");
-    LOCATION_PREFIX = resourceBundle.getString("prefixes.location");
-    LOCATION_ID_PREFIX = resourceBundle.getString("prefixes.location.id");
-    LOCATION_OWNER_ID_PREFIX = resourceBundle.getString("prefixes.location.ownerId");
-    LOCATION_ADDRESS_PREFIX = resourceBundle.getString("prefixes.location.address");
-    LOCATION_LATITUDE_PREFIX = resourceBundle.getString("prefixes.location.latitude");
-    LOCATION_LONGITUDE_PREFIX = resourceBundle.getString("prefixes.location.longitude");
+    workerPrefix = resourceBundle.getString("prefixes.worker");
+    workerOwnerIdPrefix = resourceBundle.getString("prefixes.worker.ownerId");
+    workerIdPrefix = resourceBundle.getString("prefixes.worker.id");
+    workerKeyPrefix = resourceBundle.getString("prefixes.worker.key");
+    workerNamePrefix = resourceBundle.getString("prefixes.worker.name");
+    workerSalaryPrefix = resourceBundle.getString("prefixes.worker.salary");
+    workerStartDatePrefix = resourceBundle.getString("prefixes.worker.startDate");
+    workerEndDatePrefix = resourceBundle.getString("prefixes.worker.endDate");
+    workerStatusPrefix = resourceBundle.getString("prefixes.worker.status");
+
+    coordinatesPrefix = resourceBundle.getString("prefixes.coordinates");
+    coordinatesIdPrefix = resourceBundle.getString("prefixes.coordinates.id");
+    coordinatesOwnerIdPrefix = resourceBundle.getString("prefixes.coordinates.ownerId");
+    coordinatesXPrefix = resourceBundle.getString("prefixes.coordinates.x");
+    coordinatesYPrefix = resourceBundle.getString("prefixes.coordinates.y");
+
+    personPrefix = resourceBundle.getString("prefixes.person");
+    personIdPrefix = resourceBundle.getString("prefixes.person.id");
+    personOwnerIdPrefix = resourceBundle.getString("prefixes.person.ownerId");
+    personPassportIdPrefix = resourceBundle.getString("prefixes.person.passportId");
+    personEyeColorPrefix = resourceBundle.getString("prefixes.person.eyeColor");
+    personHairColorPrefix = resourceBundle.getString("prefixes.person.hairColor");
+
+    locationPrefix = resourceBundle.getString("prefixes.location");
+    locationIdPrefix = resourceBundle.getString("prefixes.location.id");
+    locationOwnerIdPrefix = resourceBundle.getString("prefixes.location.ownerId");
+    locationXPrefix = resourceBundle.getString("prefixes.location.x");
+    locationYPrefix = resourceBundle.getString("prefixes.location.y");
+    locationZPrefix = resourceBundle.getString("prefixes.location.z");
+    locationNamePrefix = resourceBundle.getString("prefixes.location.name");
   }
 
-  protected final void appendWorker(StringBuilder stringBuilder, Worker worker) {
+  protected final String workerToString(Worker worker) {
+    StringBuilder stringBuilder = new StringBuilder(String.format(NAME_PATTERN, workerPrefix));
+
     if (worker == null) {
-      return;
+      return stringBuilder.toString();
     }
 
     stringBuilder
-        .append(String.format(WORKER_PREFIX_PATTERN, WORKER_PREFIX))
         .append(System.lineSeparator())
-        .append(String.format(WORKER_PATTERN, WORKER_ID_PREFIX, worker.getId()))
+        .append(String.format(PREFIX_PATTERN, workerIdPrefix, worker.getId()))
         .append(System.lineSeparator())
-        .append(String.format(WORKER_PATTERN, WORKER_OWNER_ID_PREFIX, worker.getOwnerId()))
+        .append(String.format(PREFIX_PATTERN, workerOwnerIdPrefix, worker.getOwnerId()))
+        .append(System.lineSeparator())
+        .append(String.format(PREFIX_PATTERN, workerKeyPrefix, worker.getKey()))
         .append(System.lineSeparator());
 
-    if (worker.getCreationDate() != null) {
+    if (worker.getName() != null) {
       stringBuilder
-          .append(
-              String.format(
-                  WORKER_PATTERN,
-                  WORKER_CREATION_DATE_PREFIX,
-                  dateFormat.format(worker.getCreationDate())))
+          .append(String.format(PREFIX_PATTERN, workerNamePrefix, worker.getName()))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, workerNamePrefix))
           .append(System.lineSeparator());
     }
 
-    if (worker.getSalary() != null) {
-      stringBuilder
-          .append(
-              String.format(
-                  WORKER_PATTERN, WORKER_SALARY_PREFIX, currencyFormat.format(worker.getSalary())))
-          .append(System.lineSeparator());
-    }
+    String coordinatesString =
+        coordinatesToString(worker.getCoordinates())
+            .replaceAll(System.lineSeparator(), System.lineSeparator() + '\t');
 
-    if (worker.getStatus() != null) {
-      stringBuilder
-          .append(
-              String.format(
-                  WORKER_PATTERN, WORKER_STATUS_PREFIX, statusFormat.format(worker.getStatus())))
-          .append(System.lineSeparator());
-    }
+    stringBuilder
+        .append('\t')
+        .append(coordinatesString)
+        .append(System.lineSeparator())
+        .append(
+            String.format(
+                PREFIX_PATTERN, workerSalaryPrefix, currencyFormat.format(worker.getSalary())))
+        .append(System.lineSeparator());
 
     if (worker.getStartDate() != null) {
       stringBuilder
           .append(
               String.format(
-                  WORKER_PATTERN,
-                  WORKER_START_DATE_PREFIX,
-                  dateFormat.format(worker.getStartDate())))
+                  PREFIX_PATTERN, workerStartDatePrefix, dateFormat.format(worker.getStartDate())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, workerStartDatePrefix))
           .append(System.lineSeparator());
     }
 
@@ -160,114 +176,185 @@ public abstract class ViewCommand extends Command {
       stringBuilder
           .append(
               String.format(
-                  WORKER_PATTERN, WORKER_END_DATE_PREFIX, dateFormat.format(worker.getEndDate())))
+                  PREFIX_PATTERN, workerEndDatePrefix, dateFormat.format(worker.getEndDate())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, workerEndDatePrefix))
           .append(System.lineSeparator());
     }
 
-    appendCoordinates(stringBuilder, worker.getCoordinates());
-    appendPerson(stringBuilder, worker.getPerson());
+    if (worker.getStatus() != null) {
+      stringBuilder
+          .append(
+              String.format(
+                  PREFIX_PATTERN, workerStatusPrefix, statusFormat.format(worker.getStatus())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, workerStatusPrefix))
+          .append(System.lineSeparator());
+    }
 
-    logger.info(() -> "Worker was appended.");
+    String personString =
+        personToString(worker.getPerson())
+            .replaceAll(System.lineSeparator(), System.lineSeparator() + '\t');
+
+    stringBuilder.append('\t').append(personString);
+
+    logger.info(() -> "Worker was converted to string.");
+    return stringBuilder.toString();
   }
 
-  protected final void appendCoordinates(StringBuilder stringBuilder, Coordinates coordinates) {
+  protected final String coordinatesToString(Coordinates coordinates) {
+    StringBuilder stringBuilder = new StringBuilder(String.format(NAME_PATTERN, coordinatesPrefix));
+
     if (coordinates == null) {
-      return;
+      return stringBuilder.toString();
     }
 
     stringBuilder
-        .append(String.format(COORDINATES_PREFIX_PATTERN, COORDINATES_PREFIX))
         .append(System.lineSeparator())
-        .append(String.format(COORDINATES_PATTERN, COORDINATES_ID_PREFIX, coordinates.getId()))
+        .append(String.format(PREFIX_PATTERN, coordinatesIdPrefix, coordinates.getId()))
         .append(System.lineSeparator())
-        .append(
-            String.format(
-                COORDINATES_PATTERN, COORDINATES_OWNER_ID_PREFIX, coordinates.getOwnerId()))
+        .append(String.format(PREFIX_PATTERN, coordinatesOwnerIdPrefix, coordinates.getOwnerId()))
         .append(System.lineSeparator());
 
-    if (coordinates.getX() != null) {
-      stringBuilder
-          .append(String.format(COORDINATES_PATTERN, COORDINATES_X_PREFIX, coordinates.getX()))
-          .append(System.lineSeparator());
-    }
+    stringBuilder
+        .append(
+            String.format(
+                PREFIX_PATTERN, coordinatesXPrefix, numberFormat.format(coordinates.getX())))
+        .append(System.lineSeparator());
 
     if (coordinates.getY() != null) {
       stringBuilder
-          .append(String.format(COORDINATES_PATTERN, COORDINATES_Y_PREFIX, coordinates.getY()))
+          .append(
+              String.format(
+                  PREFIX_PATTERN, coordinatesYPrefix, numberFormat.format(coordinates.getY())))
           .append(System.lineSeparator());
-    }
-
-    if (coordinates.getZ() != null) {
+    } else {
       stringBuilder
-          .append(String.format(COORDINATES_PATTERN, COORDINATES_Z_PREFIX, coordinates.getZ()))
+          .append(String.format(EMPTY_PATTERN, coordinatesYPrefix))
           .append(System.lineSeparator());
     }
 
-    logger.info(() -> "Coordinates was appended.");
+    logger.info(() -> "Coordinates was converted to string.");
+    return stringBuilder.toString();
   }
 
-  protected final void appendPerson(StringBuilder stringBuilder, Person person) {
+  protected final String personToString(Person person) {
+    StringBuilder stringBuilder = new StringBuilder(String.format(NAME_PATTERN, personPrefix));
+
     if (person == null) {
-      return;
+      return stringBuilder.toString();
     }
 
     stringBuilder
-        .append(String.format(PERSON_PREFIX_PATTERN, PERSON_PREFIX))
         .append(System.lineSeparator())
-        .append(String.format(PERSON_PATTERN, PERSON_ID_PREFIX, person.getId()))
+        .append(String.format(PREFIX_PATTERN, personIdPrefix, person.getId()))
         .append(System.lineSeparator())
-        .append(String.format(PERSON_PATTERN, PERSON_OWNER_ID_PREFIX, person.getOwnerId()))
+        .append(String.format(PREFIX_PATTERN, personOwnerIdPrefix, person.getOwnerId()))
         .append(System.lineSeparator());
-
-    if (person.getName() != null) {
-      stringBuilder
-          .append(String.format(PERSON_PATTERN, PERSON_NAME_PREFIX, person.getName()))
-          .append(System.lineSeparator());
-    }
 
     if (person.getPassportId() != null) {
       stringBuilder
-          .append(String.format(PERSON_PATTERN, PERSON_PASSWORD_ID_PREFIX, person.getPassportId()))
+          .append(String.format(PREFIX_PATTERN, personPassportIdPrefix, person.getPassportId()))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, personPassportIdPrefix))
           .append(System.lineSeparator());
     }
 
-    appendLocation(stringBuilder, person.getLocation());
+    if (person.getEyeColor() != null) {
+      stringBuilder
+          .append(
+              String.format(
+                  PREFIX_PATTERN,
+                  personEyeColorPrefix,
+                  eyeColorFormat.format(person.getEyeColor())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, personEyeColorPrefix))
+          .append(System.lineSeparator());
+    }
 
-    logger.info(() -> "Person was appended.");
+    if (person.getHairColor() != null) {
+      stringBuilder
+          .append(
+              String.format(
+                  PREFIX_PATTERN,
+                  personHairColorPrefix,
+                  hairColorFormat.format(person.getHairColor())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, personHairColorPrefix))
+          .append(System.lineSeparator());
+    }
+
+    String locationString =
+        locationToString(person.getLocation())
+            .replaceAll(System.lineSeparator(), System.lineSeparator() + '\t');
+    stringBuilder.append('\t').append(locationString);
+
+    logger.info(() -> "Person was converted to string.");
+    return stringBuilder.toString();
   }
 
-  protected final void appendLocation(StringBuilder stringBuilder, Location location) {
+  protected final String locationToString(Location location) {
+    StringBuilder stringBuilder = new StringBuilder(String.format(NAME_PATTERN, locationPrefix));
+
     if (location == null) {
-      return;
+      return stringBuilder.toString();
     }
 
     stringBuilder
-        .append(String.format(LOCATION_PREFIX_PATTERN, LOCATION_PREFIX))
         .append(System.lineSeparator())
-        .append(String.format(LOCATION_PATTERN, LOCATION_ID_PREFIX, location.getId()))
+        .append(String.format(PREFIX_PATTERN, locationIdPrefix, location.getId()))
         .append(System.lineSeparator())
-        .append(String.format(LOCATION_PATTERN, LOCATION_OWNER_ID_PREFIX, location.getOwnerId()))
+        .append(String.format(PREFIX_PATTERN, locationOwnerIdPrefix, location.getOwnerId()))
         .append(System.lineSeparator());
 
-    if (location.getAddress() != null) {
-      stringBuilder
-          .append(String.format(LOCATION_PATTERN, LOCATION_ADDRESS_PREFIX, location.getAddress()))
-          .append(System.lineSeparator());
-    }
-
-    if (location.getLatitude() != null) {
-      stringBuilder
-          .append(String.format(LOCATION_PATTERN, LOCATION_LATITUDE_PREFIX, location.getLatitude()))
-          .append(System.lineSeparator());
-    }
-
-    if (location.getLongitude() != null) {
+    if (location.getX() != null) {
       stringBuilder
           .append(
-              String.format(LOCATION_PATTERN, LOCATION_LONGITUDE_PREFIX, location.getLongitude()))
+              String.format(PREFIX_PATTERN, locationXPrefix, numberFormat.format(location.getX())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, locationXPrefix))
           .append(System.lineSeparator());
     }
 
-    logger.info(() -> "Location was appended.");
+    stringBuilder
+        .append(
+            String.format(PREFIX_PATTERN, locationYPrefix, numberFormat.format(location.getY())))
+        .append(System.lineSeparator());
+
+    if (location.getZ() != null) {
+      stringBuilder
+          .append(
+              String.format(PREFIX_PATTERN, locationZPrefix, numberFormat.format(location.getZ())))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, locationZPrefix))
+          .append(System.lineSeparator());
+    }
+
+    if (location.getName() != null) {
+      stringBuilder
+          .append(String.format(PREFIX_PATTERN, locationNamePrefix, location.getName()))
+          .append(System.lineSeparator());
+    } else {
+      stringBuilder
+          .append(String.format(EMPTY_PATTERN, locationNamePrefix))
+          .append(System.lineSeparator());
+    }
+
+    logger.info(() -> "Location was converted to string.");
+    return stringBuilder.toString();
   }
 }

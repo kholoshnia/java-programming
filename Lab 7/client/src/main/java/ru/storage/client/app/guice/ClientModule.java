@@ -21,16 +21,19 @@ import ru.storage.client.controller.argumentFormer.FormerMediator;
 import ru.storage.client.controller.argumentFormer.argumentFormers.*;
 import ru.storage.client.controller.localeManager.LocaleListener;
 import ru.storage.client.controller.localeManager.LocaleManager;
+import ru.storage.client.controller.responseHandler.MessageMediator;
 import ru.storage.client.controller.responseHandler.ResponseHandler;
+import ru.storage.client.controller.responseHandler.formatter.Formatter;
 import ru.storage.client.controller.responseHandler.formatter.StringFormatter;
 import ru.storage.client.controller.responseHandler.responseHandlers.*;
 import ru.storage.client.controller.validator.validators.*;
 import ru.storage.client.view.console.Console;
-import ru.storage.client.view.console.MessageMediator;
 import ru.storage.client.view.console.Terminal;
 import ru.storage.client.view.console.exceptions.ConsoleException;
 import ru.storage.common.ArgumentMediator;
 import ru.storage.common.CommandMediator;
+import ru.storage.common.chunker.ByteChunker;
+import ru.storage.common.chunker.Chunker;
 import ru.storage.common.exitManager.ExitListener;
 import ru.storage.common.exitManager.ExitManager;
 import ru.storage.common.guice.CommonModule;
@@ -44,23 +47,23 @@ import java.util.List;
 import java.util.Map;
 
 public final class ClientModule extends AbstractModule {
+  private static final Logger logger = LogManager.getLogger(ClientModule.class);
+
   private static final String CLIENT_CONFIG_PATH = "client.properties";
 
-  private final Logger logger;
-
-  public ClientModule(String[] args) {
-    logger = LogManager.getLogger(ClientModule.class);
-  }
+  public ClientModule(String[] args) {}
 
   @Override
   protected void configure() {
     install(new CommonModule());
     logger.debug(() -> "Common module was installed.");
 
-    bind(IdFormer.class).in(Scopes.SINGLETON);
+    bind(DateFormer.class).in(Scopes.SINGLETON);
+    bind(KeyFormer.class).in(Scopes.SINGLETON);
     bind(LoginFormer.class).in(Scopes.SINGLETON);
     bind(NewWorkerFormer.class).in(Scopes.SINGLETON);
     bind(NewWorkerIdFormer.class).in(Scopes.SINGLETON);
+    bind(NewWorkerKeyFormer.class).in(Scopes.SINGLETON);
     bind(NoArgumentsFormer.class).in(Scopes.SINGLETON);
     bind(RegisterFormer.class).in(Scopes.SINGLETON);
     bind(ScriptFormer.class).in(Scopes.SINGLETON);
@@ -73,12 +76,13 @@ public final class ClientModule extends AbstractModule {
     bind(RegisterValidator.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Validators were configured.");
 
+    bind(StringFormatter.class).in(Scopes.SINGLETON);
+    bind(Formatter.class).to(StringFormatter.class);
     bind(MessageMediator.class).in(Scopes.SINGLETON);
     bind(FormerMediator.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Controller was configured.");
 
     bind(Console.class).to(Terminal.class);
-
     bind(Client.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Client was configured.");
   }
@@ -86,6 +90,7 @@ public final class ClientModule extends AbstractModule {
   @Provides
   @Singleton
   Terminal provideConsole(
+      Configuration configuration,
       ExitManager exitManager,
       ServerWorker serverWorker,
       CommandMediator commandMediator,
@@ -98,6 +103,7 @@ public final class ClientModule extends AbstractModule {
     try {
       console =
           new Terminal(
+              configuration,
               exitManager,
               System.in,
               System.out,
@@ -116,7 +122,19 @@ public final class ClientModule extends AbstractModule {
 
   @Provides
   @Singleton
-  ServerWorker provideServerWorker(Configuration configuration, Serializer serializer)
+  ByteChunker provideChunker(Configuration configuration) {
+    int bufferSize = configuration.getInt("server.bufferSize");
+    String stopWord = configuration.getString("server.stopWord");
+
+    ByteChunker chunker = new Chunker(bufferSize, stopWord);
+    logger.debug(() -> "Provided ByteChunker.");
+    return chunker;
+  }
+
+  @Provides
+  @Singleton
+  ServerWorker provideServerWorker(
+      Configuration configuration, ByteChunker chunker, Serializer serializer)
       throws ProvidingException {
     ServerWorker serverWorker;
 
@@ -124,7 +142,7 @@ public final class ClientModule extends AbstractModule {
       InetAddress address = InetAddress.getByName(configuration.getString("server.address"));
       int bufferSize = configuration.getInt("server.bufferSize");
       int port = configuration.getInt("server.port");
-      serverWorker = new ServerWorker(address, port, bufferSize, serializer);
+      serverWorker = new ServerWorker(address, port, bufferSize, chunker, serializer);
     } catch (UnknownHostException e) {
       logger.fatal(() -> "Cannot provide Server.", e);
       throw new ProvidingException(e);
@@ -143,10 +161,11 @@ public final class ClientModule extends AbstractModule {
       PersonValidator personValidator,
       LocationValidator locationValidator,
       RegisterValidator registerValidator,
-      IdFormer idFormer,
+      KeyFormer keyFormer,
       LoginFormer loginFormer,
       NewWorkerFormer newWorkerFormer,
-      NewWorkerIdFormer newWorkerId,
+      NewWorkerIdFormer newWorkerIdFormer,
+      NewWorkerKeyFormer newWorkerKeyFormer,
       NoArgumentsFormer noArgumentsFormer,
       RegisterFormer registerFormer,
       ScriptFormer scriptFormer) {
@@ -159,10 +178,11 @@ public final class ClientModule extends AbstractModule {
             add(personValidator);
             add(locationValidator);
             add(registerValidator);
-            add(idFormer);
+            add(keyFormer);
             add(loginFormer);
             add(newWorkerFormer);
-            add(newWorkerId);
+            add(newWorkerIdFormer);
+            add(newWorkerKeyFormer);
             add(noArgumentsFormer);
             add(registerFormer);
             add(scriptFormer);
@@ -178,29 +198,37 @@ public final class ClientModule extends AbstractModule {
   @Singleton
   Map<String, ArgumentFormer> provideArgumentFormerMap(
       CommandMediator commandMediator,
-      IdFormer idFormer,
+      DateFormer dateFormer,
+      KeyFormer keyFormer,
       LoginFormer loginFormer,
       NewWorkerFormer newWorkerFormer,
-      NewWorkerIdFormer newWorkerId,
+      NewWorkerIdFormer newWorkerIdFormer,
+      NewWorkerKeyFormer newWorkerKeyFormer,
       NoArgumentsFormer noArgumentsFormer,
       RegisterFormer registerFormer,
       ScriptFormer scriptFormer) {
     Map<String, ArgumentFormer> argumentFormerMap =
         new HashMap<String, ArgumentFormer>() {
           {
-            put(commandMediator.LOGIN, loginFormer);
-            put(commandMediator.LOGOUT, noArgumentsFormer);
-            put(commandMediator.REGISTER, registerFormer);
-            put(commandMediator.SHOW_HISTORY, noArgumentsFormer);
-            put(commandMediator.CLEAR_HISTORY, noArgumentsFormer);
-            put(commandMediator.ADD, newWorkerFormer);
-            put(commandMediator.REMOVE, idFormer);
-            put(commandMediator.UPDATE, newWorkerId);
-            put(commandMediator.EXIT, noArgumentsFormer);
-            put(commandMediator.HELP, noArgumentsFormer);
-            put(commandMediator.INFO, noArgumentsFormer);
-            put(commandMediator.SHOW, noArgumentsFormer);
-            put(commandMediator.EXECUTE_SCRIPT, scriptFormer);
+            put(commandMediator.login, loginFormer);
+            put(commandMediator.logout, noArgumentsFormer);
+            put(commandMediator.register, registerFormer);
+            put(commandMediator.history, noArgumentsFormer);
+            put(commandMediator.insert, newWorkerKeyFormer);
+            put(commandMediator.update, newWorkerIdFormer);
+            put(commandMediator.removeKey, keyFormer);
+            put(commandMediator.clear, noArgumentsFormer);
+            put(commandMediator.removeLower, newWorkerFormer);
+            put(commandMediator.replaceIfLower, newWorkerKeyFormer);
+            put(commandMediator.info, noArgumentsFormer);
+            put(commandMediator.show, noArgumentsFormer);
+            put(commandMediator.printAscending, noArgumentsFormer);
+            put(commandMediator.minByName, noArgumentsFormer);
+            put(commandMediator.countLessThanStartDate, dateFormer);
+            put(commandMediator.help, noArgumentsFormer);
+            put(commandMediator.save, noArgumentsFormer);
+            put(commandMediator.executeScript, scriptFormer);
+            put(commandMediator.exit, noArgumentsFormer);
           }
         };
 
@@ -220,22 +248,25 @@ public final class ClientModule extends AbstractModule {
     Map<String, ArgumentValidator> argumentValidatorMap =
         new HashMap<String, ArgumentValidator>() {
           {
-            put(argumentMediator.WORKER_ID, workerValidator::checkId);
-            put(argumentMediator.WORKER_SALARY, workerValidator::checkSalary);
-            put(argumentMediator.WORKER_STATUS, workerValidator::checkStatus);
-            put(argumentMediator.WORKER_START_DATE, workerValidator::checkStartDate);
-            put(argumentMediator.WORKER_END_DATE, workerValidator::checkEndDate);
-            put(argumentMediator.COORDINATES_X, coordinatesValidator::checkX);
-            put(argumentMediator.COORDINATES_Y, coordinatesValidator::checkY);
-            put(argumentMediator.COORDINATES_Z, coordinatesValidator::checkZ);
-            put(argumentMediator.PERSON_NAME, personValidator::checkName);
-            put(argumentMediator.PERSON_PASSPORT_ID, personValidator::checkPassportId);
-            put(argumentMediator.LOCATION_ADDRESS, locationValidator::checkAddress);
-            put(argumentMediator.LOCATION_LATITUDE, locationValidator::checkLatitude);
-            put(argumentMediator.LOCATION_LONGITUDE, locationValidator::checkLongitude);
-            put(argumentMediator.USER_NAME, registerValidator::checkName);
-            put(argumentMediator.USER_LOGIN, registerValidator::checkLogin);
-            put(argumentMediator.USER_PASSWORD, registerValidator::checkPassword);
+            put(argumentMediator.workerId, workerValidator::checkId);
+            put(argumentMediator.workerKey, workerValidator::checkKey);
+            put(argumentMediator.workerName, workerValidator::checkName);
+            put(argumentMediator.workerSalary, workerValidator::checkSalary);
+            put(argumentMediator.workerStartDate, workerValidator::checkStartDate);
+            put(argumentMediator.workerEndDate, workerValidator::checkEndDate);
+            put(argumentMediator.workerStatus, workerValidator::checkStatus);
+            put(argumentMediator.coordinatesX, coordinatesValidator::checkX);
+            put(argumentMediator.coordinatesY, coordinatesValidator::checkY);
+            put(argumentMediator.personPassportId, personValidator::checkPassportId);
+            put(argumentMediator.personEyeColor, personValidator::checkEyeColor);
+            put(argumentMediator.personHairColor, personValidator::checkHairColor);
+            put(argumentMediator.locationX, locationValidator::checkX);
+            put(argumentMediator.locationY, locationValidator::checkY);
+            put(argumentMediator.locationZ, locationValidator::checkZ);
+            put(argumentMediator.locationName, locationValidator::checkName);
+            put(argumentMediator.userName, registerValidator::checkName);
+            put(argumentMediator.userLogin, registerValidator::checkLogin);
+            put(argumentMediator.userPassword, registerValidator::checkPassword);
           }
         };
 
@@ -254,12 +285,12 @@ public final class ClientModule extends AbstractModule {
             add(new CreatedResponseHandler(stringFormatter));
             add(new NoContentResponseHandler(stringFormatter));
             add(new NotModifiedResponseHandler(stringFormatter));
-            add(new BadRequestResponseHandler(messageMediator, stringFormatter));
-            add(new UnauthorizedResponseHandler(messageMediator, stringFormatter));
+            add(new BadRequestResponseHandler(stringFormatter, messageMediator));
+            add(new UnauthorizedResponseHandler(stringFormatter, messageMediator));
             add(new NotFoundResponseHandler(stringFormatter));
             add(new ForbiddenResponseHandler(stringFormatter));
-            add(new ConflictResponseHandler(messageMediator, stringFormatter));
-            add(new InternalServerErrorResponseHandler(messageMediator, stringFormatter));
+            add(new ConflictResponseHandler(stringFormatter, messageMediator));
+            add(new InternalServerErrorResponseHandler(stringFormatter, messageMediator));
           }
         };
 

@@ -16,9 +16,11 @@ import ru.storage.server.model.source.exceptions.DataSourceException;
 
 import javax.annotation.Nonnull;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -28,6 +30,8 @@ import java.util.function.Supplier;
  * @see Repository
  */
 public final class WorkerRepository implements Repository<Worker> {
+  private static final Logger logger = LogManager.getLogger(WorkerRepository.class);
+
   private static final String WORKER_NOT_FOUND_USING_DAO_EXCEPTION;
   private static final String WORKER_NOT_FOUND_IN_COLLECTION_EXCEPTION;
 
@@ -40,9 +44,8 @@ public final class WorkerRepository implements Repository<Worker> {
         resourceBundle.getString("exceptions.workerNotFoundInCollection");
   }
 
-  private final Logger logger;
   private final DAO<Long, WorkerDTO> workerDAO;
-  private final List<Worker> workers;
+  private final Map<Integer, Worker> workers;
   private final Class<?> type;
   private final ZonedDateTime initTime;
   private long size;
@@ -50,9 +53,8 @@ public final class WorkerRepository implements Repository<Worker> {
   @Inject
   public WorkerRepository(@Nonnull DAO<Long, WorkerDTO> workerDAO)
       throws WorkerRepositoryException {
-    logger = LogManager.getLogger(WorkerRepository.class);
     this.workerDAO = workerDAO;
-    workers = initWorkersList();
+    workers = initWorkersMap();
     initTime = ZonedDateTime.now();
     type = workers.getClass();
     size = workers.size();
@@ -92,8 +94,8 @@ public final class WorkerRepository implements Repository<Worker> {
    * @return list of workers
    * @throws WorkerRepositoryException - in case of data loading or validation exceptions.
    */
-  private List<Worker> initWorkersList() throws WorkerRepositoryException {
-    List<Worker> workers = new CopyOnWriteArrayList<>();
+  private Map<Integer, Worker> initWorkersMap() throws WorkerRepositoryException {
+    Map<Integer, Worker> workers = new ConcurrentHashMap<>();
     List<WorkerDTO> allWorkerDTOs;
 
     try {
@@ -109,7 +111,7 @@ public final class WorkerRepository implements Repository<Worker> {
 
     try {
       for (WorkerDTO workerDTO : allWorkerDTOs) {
-        workers.add(workerDTO.toEntity());
+        workers.put(workerDTO.key, workerDTO.toEntity());
         logger.debug("Added worker from DAO: {}.", () -> workerDTO);
       }
     } catch (ValidationException e) {
@@ -122,9 +124,13 @@ public final class WorkerRepository implements Repository<Worker> {
 
   @Override
   public synchronized List<Worker> get(@Nonnull Query<Worker> query) throws RepositoryException {
-    List<Worker> result = query.execute(workers);
+    if (workers.isEmpty()) {
+      return new ArrayList<>();
+    }
 
-    logger.debug("Worker query: {} was executed.", () -> query);
+    List<Worker> result = query.execute(new ArrayList<>(workers.values()));
+
+    logger.info("Worker query: {} was executed.", () -> query);
     return result;
   }
 
@@ -141,7 +147,7 @@ public final class WorkerRepository implements Repository<Worker> {
     }
 
     try {
-      workers.add(result.toEntity());
+      workers.put(result.key, result.toEntity());
     } catch (ValidationException e) {
       logger.error(() -> "Validation error was caught during creating worker entity.", e);
       throw new WorkerRepositoryException(e);
@@ -174,14 +180,12 @@ public final class WorkerRepository implements Repository<Worker> {
       throw new WorkerRepositoryException(e);
     }
 
-    if (!workers.remove(found)) {
+    if (!workers.replace(found.getKey(), found, worker)) {
       logger.error(
           "Cannot delete worker, no such worker in the collection, target worker: {}.",
           () -> worker);
       throw new WorkerRepositoryException(WORKER_NOT_FOUND_IN_COLLECTION_EXCEPTION);
     }
-
-    workers.add(worker);
 
     logger.info(() -> "Worker was updated in the collection.");
   }
@@ -206,7 +210,7 @@ public final class WorkerRepository implements Repository<Worker> {
       throw new WorkerRepositoryException(e);
     }
 
-    if (!workers.remove(worker)) {
+    if (!workers.remove(worker.getKey(), worker)) {
       logger.error(
           "Cannot delete worker, no such worker in the collection, target worker: {}.",
           () -> worker);

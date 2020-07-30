@@ -12,9 +12,9 @@ import ru.storage.common.CommandMediator;
 import java.util.*;
 
 public abstract class WorkerFormer extends Former implements LocaleListener {
-  protected final ArgumentMediator argumentMediator;
+  private static final Logger logger = LogManager.getLogger(WorkerFormer.class);
 
-  private final Logger logger;
+  protected final ArgumentMediator argumentMediator;
 
   private String workerOffer;
   private String coordinatesOffer;
@@ -32,7 +32,6 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
       Map<String, ArgumentValidator> validatorMap,
       ArgumentMediator argumentMediator) {
     super(commandMediator, console, validatorMap);
-    logger = LogManager.getLogger(WorkerFormer.class);
     this.argumentMediator = argumentMediator;
   }
 
@@ -40,23 +39,20 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
     return new LinkedHashMap<String, String>() {
       {
         put(
-            argumentMediator.WORKER_SALARY,
+            argumentMediator.workerName,
+            String.format("%s: ", resourceBundle.getString("offers.worker.name")));
+        put(
+            argumentMediator.workerSalary,
             String.format("%s: ", resourceBundle.getString("offers.worker.salary")));
         put(
-            argumentMediator.WORKER_STATUS,
+            argumentMediator.workerStartDate,
+            String.format("%s: ", resourceBundle.getString("offers.worker.startDate")));
+        put(
+            argumentMediator.workerEndDate,
+            String.format("%s: ", resourceBundle.getString("offers.worker.endDate")));
+        put(
+            argumentMediator.workerStatus,
             String.format("%s: ", resourceBundle.getString("offers.worker.status")));
-        put(
-            argumentMediator.WORKER_START_DATE,
-            String.format(
-                "%s: (%s): ",
-                resourceBundle.getString("offers.worker.startDate"),
-                resourceBundle.getString("offers.dateFormat")));
-        put(
-            argumentMediator.WORKER_END_DATE,
-            String.format(
-                "%s: (%s): ",
-                resourceBundle.getString("offers.worker.endDate"),
-                resourceBundle.getString("offers.dateFormat")));
       }
     };
   }
@@ -65,14 +61,11 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
     return new LinkedHashMap<String, String>() {
       {
         put(
-            argumentMediator.COORDINATES_X,
+            argumentMediator.coordinatesX,
             String.format("%s: ", resourceBundle.getString("offers.coordinates.x")));
         put(
-            argumentMediator.COORDINATES_Y,
+            argumentMediator.coordinatesY,
             String.format("%s: ", resourceBundle.getString("offers.coordinates.y")));
-        put(
-            argumentMediator.COORDINATES_Z,
-            String.format("%s: ", resourceBundle.getString("offers.coordinates.z")));
       }
     };
   }
@@ -81,11 +74,14 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
     return new LinkedHashMap<String, String>() {
       {
         put(
-            argumentMediator.PERSON_NAME,
-            String.format("%s: ", resourceBundle.getString("offers.person.name")));
-        put(
-            argumentMediator.PERSON_PASSPORT_ID,
+            argumentMediator.personPassportId,
             String.format("%s: ", resourceBundle.getString("offers.person.passportId")));
+        put(
+            argumentMediator.personEyeColor,
+            String.format("%s: ", resourceBundle.getString("offers.person.eyeColor")));
+        put(
+            argumentMediator.personHairColor,
+            String.format("%s: ", resourceBundle.getString("offers.person.hairColor")));
       }
     };
   }
@@ -94,14 +90,17 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
     return new LinkedHashMap<String, String>() {
       {
         put(
-            argumentMediator.LOCATION_ADDRESS,
-            String.format("%s: ", resourceBundle.getString("offers.location.address")));
+            argumentMediator.locationX,
+            String.format("%s: ", resourceBundle.getString("offers.location.x")));
         put(
-            argumentMediator.LOCATION_LATITUDE,
-            String.format("%s: ", resourceBundle.getString("offers.location.latitude")));
+            argumentMediator.locationY,
+            String.format("%s: ", resourceBundle.getString("offers.location.y")));
         put(
-            argumentMediator.LOCATION_LONGITUDE,
-            String.format("%s: ", resourceBundle.getString("offers.location.longitude")));
+            argumentMediator.locationZ,
+            String.format("%s: ", resourceBundle.getString("offers.location.z")));
+        put(
+            argumentMediator.locationName,
+            String.format("%s: ", resourceBundle.getString("offers.location.name")));
       }
     };
   }
@@ -125,7 +124,7 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
     console.writeLine(workerOffer);
 
     Map<String, String> allArguments = new HashMap<>();
-    allArguments.put(argumentMediator.WORKER, argumentMediator.INCLUDED);
+    allArguments.put(argumentMediator.worker, argumentMediator.include);
 
     allArguments.putAll(readArguments(workerOffers));
     logger.info(() -> "Worker arguments were formed.");
@@ -140,14 +139,11 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
   protected final Map<String, String> formCoordinates() throws CancelException {
     Map<String, String> coordinatesArguments = new HashMap<>();
 
-    if (readArgumentQuestion(coordinatesOffer)) {
-      coordinatesArguments.put(argumentMediator.COORDINATES, argumentMediator.INCLUDED);
-      coordinatesArguments.putAll(readArguments(coordinatesOffers));
-      logger.info(() -> "Coordinates arguments were formed.");
-    } else {
-      coordinatesArguments.put(argumentMediator.COORDINATES, null);
-      logger.info(() -> "Coordinates arguments were not formed.");
-    }
+    console.writeLine(coordinatesOffer);
+
+    coordinatesArguments.put(argumentMediator.coordinates, argumentMediator.include);
+    coordinatesArguments.putAll(readArguments(coordinatesOffers));
+    logger.info(() -> "Coordinates arguments were formed.");
 
     return coordinatesArguments;
   }
@@ -155,27 +151,28 @@ public abstract class WorkerFormer extends Former implements LocaleListener {
   protected final Map<String, String> formPerson() throws CancelException {
     Map<String, String> personArguments = new HashMap<>();
 
-    console.writeLine(personOffer);
+    if (readArgumentQuestion(personOffer)) {
+      personArguments.put(argumentMediator.person, argumentMediator.include);
+      personArguments.putAll(readArguments(personOffers));
+      logger.info(() -> "Person arguments were formed.");
 
-    personArguments.put(argumentMediator.PERSON, argumentMediator.INCLUDED);
-    personArguments.putAll(readArguments(personOffers));
-    logger.info(() -> "Person arguments were formed.");
+      personArguments.putAll(formLocation());
+    } else {
+      personArguments.put(argumentMediator.person, null);
+      logger.info(() -> "Person arguments were not formed.");
+    }
 
-    personArguments.putAll(formLocation());
     return personArguments;
   }
 
   protected final Map<String, String> formLocation() throws CancelException {
     Map<String, String> locationArguments = new HashMap<>();
 
-    if (readArgumentQuestion(locationOffer)) {
-      locationArguments.put(argumentMediator.LOCATION, argumentMediator.INCLUDED);
-      locationArguments.putAll(readArguments(locationOffers));
-      logger.info(() -> "Person arguments were formed.");
-    } else {
-      locationArguments.put(argumentMediator.LOCATION, null);
-      logger.info(() -> "Person arguments were not formed.");
-    }
+    console.writeLine(locationOffer);
+
+    locationArguments.put(argumentMediator.location, argumentMediator.include);
+    locationArguments.putAll(readArguments(locationOffers));
+    logger.info(() -> "Person arguments were formed.");
 
     return locationArguments;
   }

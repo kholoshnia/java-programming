@@ -15,18 +15,22 @@ import ru.storage.server.controller.Controller;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 /** Authorizes user using java web token. */
 public class AuthController implements Controller {
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(AuthController.class);
+
   private final List<String> authCommands;
   private final Key key;
   private final String subject;
 
+  private String unauthorizedAnswer;
+  private String alreadyAuthorizedAnswer;
+
   @Inject
   public AuthController(Configuration configuration, CommandMediator commandMediator, Key key) {
-    logger = LogManager.getLogger(AuthController.class);
     authCommands = initAuthCommands(commandMediator);
     this.key = key;
     subject = configuration.getString("jwt.subject");
@@ -35,18 +39,22 @@ public class AuthController implements Controller {
   private List<String> initAuthCommands(CommandMediator commandMediator) {
     return new ArrayList<String>() {
       {
-        add(commandMediator.LOGIN);
-        add(commandMediator.REGISTER);
+        add(commandMediator.login);
+        add(commandMediator.register);
       }
     };
   }
 
+  private void changeLocale(Locale locale) {
+    ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.AuthController", locale);
+
+    unauthorizedAnswer = resourceBundle.getString("answers.unauthorized");
+    alreadyAuthorizedAnswer = resourceBundle.getString("answers.alreadyAuthorized");
+  }
+
   @Override
   public Response handle(Request request) {
-    ResourceBundle resourceBundle =
-        ResourceBundle.getBundle("localized.AuthController", request.getLocale());
-    String unauthorizedAnswer = resourceBundle.getString("answers.unauthorized");
-    String alreadyAuthorizedAnswer = resourceBundle.getString("answers.alreadyAuthorized");
+    changeLocale(request.getLocale());
 
     boolean authorized;
 

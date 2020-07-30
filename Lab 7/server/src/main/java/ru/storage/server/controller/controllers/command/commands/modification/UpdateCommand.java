@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 public final class UpdateCommand extends ModificationCommand {
-  private final String UPDATED_SUCCESSFULLY_ANSWER;
+  private static final Logger logger = LogManager.getLogger(UpdateCommand.class);
 
-  private final Logger logger;
+  private final String updatedSuccessfullyAnswer;
 
   public UpdateCommand(
       Configuration configuration,
@@ -36,12 +36,11 @@ public final class UpdateCommand extends ModificationCommand {
       Repository<Worker> workerRepository,
       Parser parser,
       User user) {
-    super(configuration, argumentMediator, arguments, locale, workerRepository, parser, user);
-    logger = LogManager.getLogger(UpdateCommand.class);
+    super(configuration, argumentMediator, arguments, locale, user, workerRepository, parser);
 
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.UpdateCommand");
 
-    UPDATED_SUCCESSFULLY_ANSWER = resourceBundle.getString("answers.updatedSuccessfully");
+    updatedSuccessfullyAnswer = resourceBundle.getString("answers.updatedSuccessfully");
   }
 
   @Override
@@ -49,15 +48,15 @@ public final class UpdateCommand extends ModificationCommand {
     Long id;
 
     try {
-      id = parser.parseLong(arguments.get(argumentMediator.WORKER_ID));
+      id = parser.parseLong(arguments.get(argumentMediator.workerId));
     } catch (ParserException e) {
       logger.warn(() -> "Got wrong id.", e);
-      return new Response(Status.BAD_REQUEST, WRONG_ID_ANSWER);
+      return new Response(Status.BAD_REQUEST, wrongIdAnswer);
     }
 
     if (id == null) {
       logger.warn(() -> "Got null id.");
-      return new Response(Status.BAD_REQUEST, WRONG_ID_ANSWER);
+      return new Response(Status.BAD_REQUEST, wrongIdAnswer);
     }
 
     Query<Worker> query = new GetEqualIdWorkers(id);
@@ -72,21 +71,21 @@ public final class UpdateCommand extends ModificationCommand {
 
     if (equalIdWorkers.isEmpty()) {
       logger.info("Worker with specified id: {} was not found.", () -> id);
-      return new Response(Status.NOT_FOUND, WORKER_NOT_FOUND_ANSWER);
+      return new Response(Status.NOT_FOUND, workerNotFoundAnswer);
     }
 
     WorkerDTO workerDTO;
 
     try {
-      workerDTO = createWorkerDTO(arguments);
+      workerDTO = createWorkerDTO();
     } catch (ParserException e) {
       logger.warn(() -> "Cannot create workerDTO.", e);
-      return new Response(Status.BAD_REQUEST, WRONG_WORKER_FORMAT_ANSWER);
+      return new Response(Status.BAD_REQUEST, wrongWorkerFormatAnswer);
     }
 
     if (workerDTO == null) {
       logger.warn(() -> "Got null worker.");
-      return new Response(Status.BAD_REQUEST, WRONG_WORKER_FORMAT_ANSWER);
+      return new Response(Status.BAD_REQUEST, wrongWorkerFormatAnswer);
     }
 
     for (Worker worker : equalIdWorkers) {
@@ -95,9 +94,10 @@ public final class UpdateCommand extends ModificationCommand {
           Worker newWorker = workerDTO.toEntity();
           setId(worker, newWorker);
           setOwnerId(newWorker);
+          newWorker.setKey(worker.getKey());
           workerRepository.update(newWorker);
         } else {
-          return new Response(Status.FORBIDDEN, NOT_OWNER_ANSWER);
+          return new Response(Status.FORBIDDEN, notOwnerAnswer);
         }
       } catch (RepositoryException | ValidationException e) {
         logger.error("Cannot update worker which id is equal to {}.", (Supplier<?>) () -> id, e);
@@ -106,6 +106,6 @@ public final class UpdateCommand extends ModificationCommand {
     }
 
     logger.info(() -> "Worker was updated.");
-    return new Response(Status.OK, UPDATED_SUCCESSFULLY_ANSWER);
+    return new Response(Status.OK, updatedSuccessfullyAnswer);
   }
 }

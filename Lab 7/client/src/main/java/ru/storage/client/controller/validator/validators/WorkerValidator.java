@@ -1,10 +1,13 @@
 package ru.storage.client.controller.validator.validators;
 
+import com.google.inject.Inject;
+import org.apache.commons.configuration2.Configuration;
 import ru.storage.client.controller.localeManager.LocaleListener;
 import ru.storage.client.controller.validator.exceptions.ValidationException;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -13,33 +16,44 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public final class WorkerValidator implements LocaleListener {
+  private final String dateTimePattern;
+
   private String wrongIdException;
+  private String wrongKeyException;
+  private String wrongNameException;
   private String wrongSalaryException;
-  private String wrongStatusException;
   private String wrongStartDateException;
   private String wrongEndDateException;
+  private String wrongStatusException;
 
-  private List<String> statusMap;
+  private List<String> statuses;
+
+  @Inject
+  public WorkerValidator(Configuration configuration) {
+    dateTimePattern = configuration.getString("dateTimePattern");
+  }
 
   @Override
   public void changeLocale(Locale locale) {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.WorkerValidator");
 
-    statusMap =
+    statuses =
         new ArrayList<String>() {
           {
-            add(resourceBundle.getString("constants.fired"));
-            add(resourceBundle.getString("constants.hired"));
-            add(resourceBundle.getString("constants.promotion"));
+            add(resourceBundle.getString("statuses.fired"));
+            add(resourceBundle.getString("statuses.hired"));
+            add(resourceBundle.getString("statuses.promotion"));
           }
         };
 
     wrongIdException = resourceBundle.getString("exceptions.wrongId");
+    wrongKeyException = resourceBundle.getString("exceptions.wrongKey");
+    wrongNameException = resourceBundle.getString("exceptions.wrongName");
     wrongSalaryException = resourceBundle.getString("exceptions.wrongSalary");
-    wrongStatusException =
-        String.format("%s %s", resourceBundle.getString("exceptions.wrongStatus"), statusMap);
     wrongStartDateException = resourceBundle.getString("exceptions.wrongStartDate");
     wrongEndDateException = resourceBundle.getString("exceptions.wrongEndDate");
+    wrongStatusException =
+        String.format("%s %s", resourceBundle.getString("exceptions.wrongStatus"), statuses);
   }
 
   public void checkId(String idString) throws ValidationException {
@@ -57,6 +71,30 @@ public final class WorkerValidator implements LocaleListener {
 
     if (id < 0) {
       throw new ValidationException(wrongIdException);
+    }
+  }
+
+  public void checkKey(String keyString) throws ValidationException {
+    if (keyString == null || keyString.isEmpty()) {
+      throw new ValidationException(wrongKeyException);
+    }
+
+    long key;
+
+    try {
+      key = Integer.parseInt(keyString);
+    } catch (NumberFormatException e) {
+      throw new ValidationException(wrongKeyException, e);
+    }
+
+    if (key < 0) {
+      throw new ValidationException(wrongKeyException);
+    }
+  }
+
+  public void checkName(String nameString) throws ValidationException {
+    if (nameString == null || nameString.isEmpty()) {
+      throw new ValidationException(wrongNameException);
     }
   }
 
@@ -78,13 +116,15 @@ public final class WorkerValidator implements LocaleListener {
     }
   }
 
-  public void checkStatus(String statusString) throws ValidationException {
-    if (statusString == null || statusString.isEmpty()) {
-      return;
+  public void checkStartDate(String startDateString) throws ValidationException {
+    if (startDateString == null || startDateString.isEmpty()) {
+      throw new ValidationException(wrongStartDateException);
     }
 
-    if (!statusMap.contains(statusString)) {
-      throw new ValidationException(wrongStatusException);
+    try {
+      new SimpleDateFormat(dateTimePattern).parse(startDateString);
+    } catch (ParseException e) {
+      throw new ValidationException(wrongStartDateException, e);
     }
   }
 
@@ -94,21 +134,19 @@ public final class WorkerValidator implements LocaleListener {
     }
 
     try {
-      LocalDateTime.parse(endDateString, DateTimeFormatter.ISO_DATE_TIME);
+      LocalDateTime.parse(endDateString, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     } catch (DateTimeParseException e) {
       throw new ValidationException(wrongEndDateException, e);
     }
   }
 
-  public void checkStartDate(String startDateString) throws ValidationException {
-    if (startDateString == null || startDateString.isEmpty()) {
-      throw new ValidationException(wrongStartDateException);
+  public void checkStatus(String statusString) throws ValidationException {
+    if (statusString == null || statusString.isEmpty()) {
+      return;
     }
 
-    try {
-      ZonedDateTime.parse(startDateString, DateTimeFormatter.ISO_DATE_TIME);
-    } catch (DateTimeParseException e) {
-      throw new ValidationException(wrongStartDateException, e);
+    if (!statuses.contains(statusString)) {
+      throw new ValidationException(wrongStatusException);
     }
   }
 }

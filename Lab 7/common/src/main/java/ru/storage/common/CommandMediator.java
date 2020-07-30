@@ -1,43 +1,66 @@
 package ru.storage.common;
 
 import com.google.inject.Inject;
-import org.apache.commons.configuration2.Configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
+/** Command mediator class contains all command names. */
 public final class CommandMediator {
-  public final String LOGIN;
-  public final String LOGOUT;
-  public final String REGISTER;
-  public final String SHOW_HISTORY;
-  public final String CLEAR_HISTORY;
-  public final String ADD;
-  public final String REMOVE;
-  public final String UPDATE;
-  public final String EXIT;
-  public final String HELP;
-  public final String INFO;
-  public final String SHOW;
-  public final String EXECUTE_SCRIPT;
+  public final String login;
+  public final String logout;
+  public final String register;
+
+  public final String history;
+
+  public final String insert;
+  public final String update;
+  public final String removeKey;
+  public final String clear;
+  public final String removeLower;
+  public final String replaceIfLower;
+
+  public final String info;
+  public final String show;
+  public final String printAscending;
+  public final String minByName;
+  public final String countLessThanStartDate;
+
+  public final String help;
+  public final String save;
+  public final String executeScript;
+  public final String exit;
 
   private final List<String> commands;
 
   @Inject
-  public CommandMediator(Configuration configuration) {
-    LOGIN = configuration.getString("commands.login");
-    LOGOUT = configuration.getString("commands.logout");
-    REGISTER = configuration.getString("commands.register");
-    SHOW_HISTORY = configuration.getString("commands.showHistory");
-    CLEAR_HISTORY = configuration.getString("commands.clearHistory");
-    ADD = configuration.getString("commands.add");
-    REMOVE = configuration.getString("commands.remove");
-    UPDATE = configuration.getString("commands.update");
-    EXIT = configuration.getString("commands.exit");
-    HELP = configuration.getString("commands.help");
-    INFO = configuration.getString("commands.info");
-    SHOW = configuration.getString("commands.show");
-    EXECUTE_SCRIPT = configuration.getString("commands.executeScript");
+  public CommandMediator() {
+    ResourceBundle resourceBundle = ResourceBundle.getBundle("CommandMediator");
+
+    login = resourceBundle.getString("commands.login");
+    logout = resourceBundle.getString("commands.logout");
+    register = resourceBundle.getString("commands.register");
+
+    history = resourceBundle.getString("commands.history");
+
+    insert = resourceBundle.getString("commands.insert");
+    update = resourceBundle.getString("commands.update");
+    removeKey = resourceBundle.getString("commands.removeKey");
+    clear = resourceBundle.getString("commands.clear");
+    removeLower = resourceBundle.getString("commands.removeLower");
+    replaceIfLower = resourceBundle.getString("commands.replaceIfLower");
+
+    info = resourceBundle.getString("commands.info");
+    show = resourceBundle.getString("commands.show");
+    printAscending = resourceBundle.getString("commands.printAscending");
+    minByName = resourceBundle.getString("commands.minByName");
+    countLessThanStartDate = resourceBundle.getString("commands.countLessThanStartDate");
+
+    help = resourceBundle.getString("commands.help");
+    save = resourceBundle.getString("commands.save");
+    executeScript = resourceBundle.getString("commands.executeScript");
+    exit = resourceBundle.getString("commands.exit");
 
     commands = initCommandList();
   }
@@ -45,44 +68,66 @@ public final class CommandMediator {
   private List<String> initCommandList() {
     return new ArrayList<String>() {
       {
-        if (LOGIN != null) {
-          add(LOGIN);
+        if (login != null) {
+          add(login);
         }
-        if (LOGOUT != null) {
-          add(LOGOUT);
+        if (logout != null) {
+          add(logout);
         }
-        if (REGISTER != null) {
-          add(REGISTER);
+        if (register != null) {
+          add(register);
         }
-        if (SHOW_HISTORY != null) {
-          add(SHOW_HISTORY);
+
+        if (history != null) {
+          add(history);
         }
-        if (CLEAR_HISTORY != null) {
-          add(CLEAR_HISTORY);
+
+        if (insert != null) {
+          add(insert);
         }
-        if (ADD != null) {
-          add(ADD);
+        if (update != null) {
+          add(update);
         }
-        if (REMOVE != null) {
-          add(REMOVE);
+        if (removeKey != null) {
+          add(removeKey);
         }
-        if (UPDATE != null) {
-          add(UPDATE);
+        if (clear != null) {
+          add(clear);
         }
-        if (EXIT != null) {
-          add(EXIT);
+        if (removeLower != null) {
+          add(removeLower);
         }
-        if (HELP != null) {
-          add(HELP);
+        if (replaceIfLower != null) {
+          add(replaceIfLower);
         }
-        if (INFO != null) {
-          add(INFO);
+
+        if (info != null) {
+          add(info);
         }
-        if (SHOW != null) {
-          add(SHOW);
+        if (show != null) {
+          add(show);
         }
-        if (EXECUTE_SCRIPT != null) {
-          add(EXECUTE_SCRIPT);
+        if (printAscending != null) {
+          add(printAscending);
+        }
+        if (minByName != null) {
+          add(minByName);
+        }
+        if (countLessThanStartDate != null) {
+          add(countLessThanStartDate);
+        }
+
+        if (help != null) {
+          add(help);
+        }
+        if (save != null) {
+          add(save);
+        }
+        if (executeScript != null) {
+          add(executeScript);
+        }
+        if (exit != null) {
+          add(exit);
         }
       }
     };

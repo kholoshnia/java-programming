@@ -12,6 +12,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.storage.common.CommandMediator;
+import ru.storage.common.chunker.ByteChunker;
+import ru.storage.common.chunker.Chunker;
 import ru.storage.common.exitManager.ExitListener;
 import ru.storage.common.exitManager.ExitManager;
 import ru.storage.common.guice.CommonModule;
@@ -34,22 +36,23 @@ import ru.storage.server.controller.controllers.command.factory.CommandFactory;
 import ru.storage.server.controller.controllers.command.factory.CommandFactoryMediator;
 import ru.storage.server.controller.controllers.command.factory.factories.*;
 import ru.storage.server.controller.services.hash.HashGenerator;
-import ru.storage.server.controller.services.hash.SHA256Generator;
+import ru.storage.server.controller.services.hash.SHA1Generator;
+import ru.storage.server.controller.services.parser.Parser;
 import ru.storage.server.controller.services.script.scriptExecutor.ScriptExecutor;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.ArgumentFormer;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.FormerMediator;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.argumentFormers.*;
 import ru.storage.server.model.dao.DAO;
 import ru.storage.server.model.dao.adapter.Adapter;
-import ru.storage.server.model.dao.adapter.adapters.RoleAdapter;
-import ru.storage.server.model.dao.adapter.adapters.StatusAdapter;
-import ru.storage.server.model.dao.adapter.adapters.ZonedDateTimeAdapter;
+import ru.storage.server.model.dao.adapter.adapters.*;
 import ru.storage.server.model.dao.daos.*;
 import ru.storage.server.model.domain.dto.dtos.*;
 import ru.storage.server.model.domain.entity.entities.user.Role;
 import ru.storage.server.model.domain.entity.entities.user.User;
 import ru.storage.server.model.domain.entity.entities.worker.Status;
 import ru.storage.server.model.domain.entity.entities.worker.Worker;
+import ru.storage.server.model.domain.entity.entities.worker.person.EyeColor;
+import ru.storage.server.model.domain.entity.entities.worker.person.HairColor;
 import ru.storage.server.model.domain.history.History;
 import ru.storage.server.model.domain.repository.Repository;
 import ru.storage.server.model.domain.repository.repositories.userRepository.UserRepository;
@@ -61,29 +64,25 @@ import ru.storage.server.model.source.exceptions.DataSourceException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Timestamp;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class ServerModule extends AbstractModule {
+  private static final Logger logger = LogManager.getLogger(ServerModule.class);
+
   private static final String SERVER_CONFIG_PATH = "server.properties";
 
-  private final String URL;
-  private final String USER;
-  private final String PASSWORD;
-
-  private final Logger logger;
+  private final String url;
+  private final String user;
+  private final String password;
 
   public ServerModule(String[] args) {
-    logger = LogManager.getLogger(ServerModule.class);
-
-    URL = args[0];
-    USER = args[1];
-    PASSWORD = args[2];
+    url = args[0];
+    user = args[1];
+    password = args[2];
   }
 
   @Override
@@ -91,15 +90,18 @@ public final class ServerModule extends AbstractModule {
     install(new CommonModule());
     logger.debug("Common module was installed.");
 
-    bind(SHA256Generator.class).in(Scopes.SINGLETON);
-    bind(HashGenerator.class).to(SHA256Generator.class);
+    bind(Parser.class).in(Scopes.SINGLETON);
+    bind(SHA1Generator.class).in(Scopes.SINGLETON);
+    bind(HashGenerator.class).to(SHA1Generator.class);
     bind(History.class).in(Scopes.SINGLETON);
     bind(ScriptExecutor.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Services were configured.");
 
-    bind(IdFormer.class).in(Scopes.SINGLETON);
+    bind(DateFormer.class).in(Scopes.SINGLETON);
+    bind(KeyFormer.class).in(Scopes.SINGLETON);
     bind(NewWorkerFormer.class).in(Scopes.SINGLETON);
     bind(NewWorkerIdFormer.class).in(Scopes.SINGLETON);
+    bind(NewWorkerKeyFormer.class).in(Scopes.SINGLETON);
     bind(NoArgumentsFormer.class).in(Scopes.SINGLETON);
     bind(ScriptFormer.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Formers were configured.");
@@ -112,13 +114,15 @@ public final class ServerModule extends AbstractModule {
     bind(FormerMediator.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Controllers were configured.");
 
-    bind(AddValidator.class).in(Scopes.SINGLETON);
-    bind(IdValidator.class).in(Scopes.SINGLETON);
+    bind(DateValidator.class).in(Scopes.SINGLETON);
+    bind(KeyValidator.class).in(Scopes.SINGLETON);
     bind(LoginValidator.class).in(Scopes.SINGLETON);
+    bind(NewWorkerIdValidator.class).in(Scopes.SINGLETON);
+    bind(NewWorkerKeyValidator.class).in(Scopes.SINGLETON);
+    bind(NewWorkerValidator.class).in(Scopes.SINGLETON);
     bind(NoArgumentsValidator.class).in(Scopes.SINGLETON);
     bind(RegisterValidator.class).in(Scopes.SINGLETON);
     bind(ScriptValidator.class).in(Scopes.SINGLETON);
-    bind(UpdateValidator.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Argument validators were configured.");
 
     bind(EntryCommandFactory.class).in(Scopes.SINGLETON);
@@ -128,12 +132,20 @@ public final class ServerModule extends AbstractModule {
     bind(SpecialCommandFactory.class).in(Scopes.SINGLETON);
     logger.debug(() -> "Command factories were configured.");
 
+    bind(DateAdapter.class).in(Scopes.SINGLETON);
+    bind(new TypeLiteral<Adapter<Date, Timestamp>>() {}).to(DateAdapter.class);
+    bind(EyeColorAdapter.class).in(Scopes.SINGLETON);
+    bind(new TypeLiteral<Adapter<EyeColor, String>>() {}).to(EyeColorAdapter.class);
+    bind(HairColorAdapter.class).in(Scopes.SINGLETON);
+    bind(new TypeLiteral<Adapter<HairColor, String>>() {}).to(HairColorAdapter.class);
+    bind(LocalDateAdapter.class).in(Scopes.SINGLETON);
+    bind(new TypeLiteral<Adapter<LocalDate, java.sql.Date>>() {}).to(LocalDateAdapter.class);
+    bind(LocalDateTimeAdapter.class).in(Scopes.SINGLETON);
+    bind(new TypeLiteral<Adapter<LocalDateTime, Timestamp>>() {}).to(LocalDateTimeAdapter.class);
     bind(RoleAdapter.class).in(Scopes.SINGLETON);
     bind(new TypeLiteral<Adapter<Role, String>>() {}).to(RoleAdapter.class);
     bind(StatusAdapter.class).in(Scopes.SINGLETON);
     bind(new TypeLiteral<Adapter<Status, String>>() {}).to(StatusAdapter.class);
-    bind(ZonedDateTimeAdapter.class).in(Scopes.SINGLETON);
-    bind(new TypeLiteral<Adapter<ZonedDateTime, Timestamp>>() {}).to(ZonedDateTimeAdapter.class);
     logger.debug(() -> "Adapters were configured.");
 
     bind(UserDAO.class).in(Scopes.SINGLETON);
@@ -172,8 +184,22 @@ public final class ServerModule extends AbstractModule {
 
   @Provides
   @Singleton
+  ByteChunker provideChunker(Configuration configuration) {
+    int bufferSize = configuration.getInt("server.bufferSize");
+    String stopWord = configuration.getString("server.stopWord");
+
+    ByteChunker chunker = new Chunker(bufferSize, stopWord);
+    logger.debug(() -> "Provided ByteChunker.");
+    return chunker;
+  }
+
+  @Provides
+  @Singleton
   ServerConnection provideServerConnection(
-      Configuration configuration, ServerProcessor serverProcessor, Serializer serializer)
+      Configuration configuration,
+      ServerProcessor serverProcessor,
+      ByteChunker chunker,
+      Serializer serializer)
       throws ProvidingException {
     ServerConnection serverConnection;
 
@@ -182,7 +208,7 @@ public final class ServerModule extends AbstractModule {
       InetAddress address = InetAddress.getByName(configuration.getString("server.localhost"));
       int port = configuration.getInt("server.port");
       serverConnection =
-          new ServerConnection(bufferSize, address, port, serverProcessor, serializer);
+          new ServerConnection(bufferSize, address, port, serverProcessor, chunker, serializer);
     } catch (SelectorException | ServerException | UnknownHostException e) {
       logger.fatal(() -> "Cannot provide Server.", e);
       throw new ProvidingException(e);
@@ -230,27 +256,27 @@ public final class ServerModule extends AbstractModule {
             });
 
     Executor handleExecutor =
-        new ForkJoinPool(
-            Runtime.getRuntime().availableProcessors(),
-            pool -> {
-              ForkJoinWorkerThread worker =
-                  ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-              worker.setName("handle-" + worker.getPoolIndex());
-              return worker;
-            },
-            null,
-            false);
-
-    Executor sendExecutor =
         Executors.newCachedThreadPool(
             new ThreadFactory() {
               private final AtomicLong index = new AtomicLong(0);
 
               @Override
               public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "send-" + index.getAndIncrement());
+                return new Thread(runnable, "handle-" + index.getAndIncrement());
               }
             });
+
+    Executor sendExecutor =
+        new ForkJoinPool(
+            Runtime.getRuntime().availableProcessors(),
+            pool -> {
+              ForkJoinWorkerThread worker =
+                  ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+              worker.setName("send-" + worker.getPoolIndex());
+              return worker;
+            },
+            null,
+            false);
 
     ExecutorService executorService =
         new ExecutorService(readExecutor, handleExecutor, sendExecutor);
@@ -301,19 +327,25 @@ public final class ServerModule extends AbstractModule {
     Map<String, CommandFactory> commandFactoryMap =
         new HashMap<String, CommandFactory>() {
           {
-            put(commandMediator.LOGIN, entryCommandFactory);
-            put(commandMediator.LOGOUT, entryCommandFactory);
-            put(commandMediator.REGISTER, entryCommandFactory);
-            put(commandMediator.SHOW_HISTORY, historyCommandFactory);
-            put(commandMediator.CLEAR_HISTORY, historyCommandFactory);
-            put(commandMediator.ADD, modificationCommandFactory);
-            put(commandMediator.REMOVE, modificationCommandFactory);
-            put(commandMediator.UPDATE, modificationCommandFactory);
-            put(commandMediator.EXIT, specialCommandFactory);
-            put(commandMediator.HELP, specialCommandFactory);
-            put(commandMediator.INFO, viewCommandFactory);
-            put(commandMediator.SHOW, viewCommandFactory);
-            put(commandMediator.EXECUTE_SCRIPT, specialCommandFactory);
+            put(commandMediator.login, entryCommandFactory);
+            put(commandMediator.logout, entryCommandFactory);
+            put(commandMediator.register, entryCommandFactory);
+            put(commandMediator.help, specialCommandFactory);
+            put(commandMediator.info, viewCommandFactory);
+            put(commandMediator.show, viewCommandFactory);
+            put(commandMediator.insert, modificationCommandFactory);
+            put(commandMediator.update, modificationCommandFactory);
+            put(commandMediator.removeKey, modificationCommandFactory);
+            put(commandMediator.clear, modificationCommandFactory);
+            put(commandMediator.save, specialCommandFactory);
+            put(commandMediator.executeScript, specialCommandFactory);
+            put(commandMediator.exit, specialCommandFactory);
+            put(commandMediator.removeLower, modificationCommandFactory);
+            put(commandMediator.history, historyCommandFactory);
+            put(commandMediator.replaceIfLower, modificationCommandFactory);
+            put(commandMediator.minByName, viewCommandFactory);
+            put(commandMediator.countLessThanStartDate, viewCommandFactory);
+            put(commandMediator.printAscending, viewCommandFactory);
           }
         };
 
@@ -325,24 +357,32 @@ public final class ServerModule extends AbstractModule {
   @Singleton
   Map<String, ArgumentFormer> provideArgumentFormerMap(
       CommandMediator commandMediator,
-      IdFormer idFormer,
+      DateFormer dateFormer,
+      KeyFormer keyFormer,
       NewWorkerFormer newWorkerFormer,
       NewWorkerIdFormer newWorkerIdFormer,
+      NewWorkerKeyFormer newWorkerKeyFormer,
       NoArgumentsFormer noArgumentsFormer,
       ScriptFormer scriptFormer) {
     Map<String, ArgumentFormer> argumentFormerMap =
         new HashMap<String, ArgumentFormer>() {
           {
-            put(commandMediator.SHOW_HISTORY, noArgumentsFormer);
-            put(commandMediator.CLEAR_HISTORY, noArgumentsFormer);
-            put(commandMediator.ADD, newWorkerFormer);
-            put(commandMediator.REMOVE, idFormer);
-            put(commandMediator.UPDATE, newWorkerIdFormer);
-            put(commandMediator.EXIT, noArgumentsFormer);
-            put(commandMediator.HELP, noArgumentsFormer);
-            put(commandMediator.INFO, noArgumentsFormer);
-            put(commandMediator.SHOW, noArgumentsFormer);
-            put(commandMediator.EXECUTE_SCRIPT, scriptFormer);
+            put(commandMediator.help, noArgumentsFormer);
+            put(commandMediator.info, noArgumentsFormer);
+            put(commandMediator.show, noArgumentsFormer);
+            put(commandMediator.insert, newWorkerKeyFormer);
+            put(commandMediator.update, newWorkerIdFormer);
+            put(commandMediator.removeKey, keyFormer);
+            put(commandMediator.clear, noArgumentsFormer);
+            put(commandMediator.save, noArgumentsFormer);
+            put(commandMediator.executeScript, scriptFormer);
+            put(commandMediator.exit, noArgumentsFormer);
+            put(commandMediator.removeLower, newWorkerFormer);
+            put(commandMediator.history, noArgumentsFormer);
+            put(commandMediator.replaceIfLower, newWorkerKeyFormer);
+            put(commandMediator.minByName, noArgumentsFormer);
+            put(commandMediator.countLessThanStartDate, dateFormer);
+            put(commandMediator.printAscending, noArgumentsFormer);
           }
         };
 
@@ -354,29 +394,37 @@ public final class ServerModule extends AbstractModule {
   @Singleton
   Map<String, ArgumentValidator> provideArgumentValidatorMap(
       CommandMediator commandMediator,
-      AddValidator addValidator,
-      IdValidator idValidator,
+      DateValidator dateValidator,
+      KeyValidator keyValidator,
       LoginValidator loginValidator,
+      NewWorkerIdValidator newWorkerIdValidator,
+      NewWorkerKeyValidator newWorkerKeyValidator,
+      NewWorkerValidator newWorkerValidator,
       NoArgumentsValidator noArgumentsValidator,
       RegisterValidator registerValidator,
-      ScriptValidator scriptValidator,
-      UpdateValidator updateValidator) {
+      ScriptValidator scriptValidator) {
     Map<String, ArgumentValidator> validatorMap =
         new HashMap<String, ArgumentValidator>() {
           {
-            put(commandMediator.LOGIN, loginValidator);
-            put(commandMediator.LOGOUT, noArgumentsValidator);
-            put(commandMediator.REGISTER, registerValidator);
-            put(commandMediator.SHOW_HISTORY, noArgumentsValidator);
-            put(commandMediator.CLEAR_HISTORY, noArgumentsValidator);
-            put(commandMediator.ADD, addValidator);
-            put(commandMediator.REMOVE, idValidator);
-            put(commandMediator.UPDATE, updateValidator);
-            put(commandMediator.EXIT, noArgumentsValidator);
-            put(commandMediator.HELP, noArgumentsValidator);
-            put(commandMediator.INFO, noArgumentsValidator);
-            put(commandMediator.SHOW, noArgumentsValidator);
-            put(commandMediator.EXECUTE_SCRIPT, scriptValidator);
+            put(commandMediator.login, loginValidator);
+            put(commandMediator.logout, noArgumentsValidator);
+            put(commandMediator.register, registerValidator);
+            put(commandMediator.help, noArgumentsValidator);
+            put(commandMediator.info, noArgumentsValidator);
+            put(commandMediator.show, noArgumentsValidator);
+            put(commandMediator.insert, newWorkerKeyValidator);
+            put(commandMediator.update, newWorkerIdValidator);
+            put(commandMediator.removeKey, keyValidator);
+            put(commandMediator.clear, noArgumentsValidator);
+            put(commandMediator.save, noArgumentsValidator);
+            put(commandMediator.executeScript, scriptValidator);
+            put(commandMediator.exit, noArgumentsValidator);
+            put(commandMediator.removeLower, newWorkerValidator);
+            put(commandMediator.history, noArgumentsValidator);
+            put(commandMediator.replaceIfLower, newWorkerKeyValidator);
+            put(commandMediator.minByName, noArgumentsValidator);
+            put(commandMediator.countLessThanStartDate, dateValidator);
+            put(commandMediator.printAscending, noArgumentsValidator);
           }
         };
 
@@ -386,9 +434,14 @@ public final class ServerModule extends AbstractModule {
 
   @Provides
   @Singleton
-  ExitManager provideExitManager(DataSource dataSource) {
-    List<ExitListener> entities = new ArrayList<>();
-    entities.add(dataSource);
+  ExitManager provideExitManager(DataSource dataSource, ServerConnection serverConnection) {
+    List<ExitListener> entities =
+        new ArrayList<ExitListener>() {
+          {
+            add(dataSource);
+            add(serverConnection);
+          }
+        };
 
     ExitManager exitManager = new ExitManager(entities);
     logger.debug(() -> "Provided ExitManager.");
@@ -401,7 +454,7 @@ public final class ServerModule extends AbstractModule {
     DataSource dataSource;
 
     try {
-      dataSource = new Database(URL, USER, PASSWORD);
+      dataSource = new Database(url, user, password);
     } catch (DataSourceException e) {
       throw new ProvidingException(e);
     }

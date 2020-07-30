@@ -795,18 +795,19 @@ true posixrules
     <database id="3" parent="1" name="workers_database">
       <ObjectId>16384</ObjectId>
       <Owner>vadim</Owner>
-      <IntrospectionStateNumber>972</IntrospectionStateNumber>
+      <IntrospectionStateNumber>2334</IntrospectionStateNumber>
       <Current>1</Current>
-      <Relations>sequence|table|25061|25063|1
-sequence|table|25841|25845|1
-sequence|table|25843|25845|2
-sequence|table|25863|25867|1
-sequence|table|25865|25867|2
-sequence|table|25888|25892|1
-sequence|table|25890|25892|2
-sequence|table|25916|25922|1
-sequence|table|25918|25922|2
-sequence|table|25920|25922|9
+      <Relations>sequence|table|30347|30349|1
+sequence|table|30366|30370|1
+sequence|table|30368|30370|2
+sequence|table|30384|30388|1
+sequence|table|30386|30388|2
+sequence|table|30404|30410|1
+sequence|table|30406|30410|2
+sequence|table|30408|30410|6
+sequence|table|30433|30439|1
+sequence|table|30435|30439|2
+sequence|table|30437|30439|5
 </Relations>
     </database>
     <role id="4" parent="1" name="pg_execute_server_program">
@@ -858,7 +859,7 @@ sequence|table|25920|25922|9
       <Comment>standard public schema</Comment>
       <StateNumber>275</StateNumber>
       <Owner>vadim</Owner>
-      <IntrospectionStateNumber>973</IntrospectionStateNumber>
+      <IntrospectionStateNumber>2335</IntrospectionStateNumber>
       <Current>1</Current>
     </schema>
     <access-method id="16" parent="3" name="heap">
@@ -929,593 +930,583 @@ sequence|table|25920|25922|9
     <language id="26" parent="3" name="plpgsql"/>
     <language id="27" parent="3" name="sql"/>
     <sequence id="28" parent="15" name="coordinates_id_seq">
-      <ObjectId>25841</ObjectId>
+      <ObjectId>30366</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2330</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
     <sequence id="29" parent="15" name="coordinates_owner_id_seq">
-      <ObjectId>25843</ObjectId>
+      <ObjectId>30368</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2330</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
     <sequence id="30" parent="15" name="locations_id_seq">
-      <ObjectId>25863</ObjectId>
+      <ObjectId>30384</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>947</StateNumber>
+      <StateNumber>2331</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
     <sequence id="31" parent="15" name="locations_owner_id_seq">
-      <ObjectId>25865</ObjectId>
+      <ObjectId>30386</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>947</StateNumber>
+      <StateNumber>2331</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
     <sequence id="32" parent="15" name="persons_id_seq">
-      <ObjectId>25888</ObjectId>
+      <ObjectId>30404</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
-    <sequence id="33" parent="15" name="persons_owner_id_seq">
-      <ObjectId>25890</ObjectId>
+    <sequence id="33" parent="15" name="persons_location_seq">
+      <ObjectId>30408</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
-    <sequence id="34" parent="15" name="users_id_seq">
-      <ObjectId>25061</ObjectId>
+    <sequence id="34" parent="15" name="persons_owner_id_seq">
+      <ObjectId>30406</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>780</StateNumber>
+      <StateNumber>2332</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
-    <sequence id="35" parent="15" name="workers_id_seq">
-      <ObjectId>25916</ObjectId>
+    <sequence id="35" parent="15" name="users_id_seq">
+      <ObjectId>30347</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>949</StateNumber>
+      <StateNumber>2329</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
-    <sequence id="36" parent="15" name="workers_owner_id_seq">
-      <ObjectId>25918</ObjectId>
+    <sequence id="36" parent="15" name="workers_coordinates_seq">
+      <ObjectId>30437</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>949</StateNumber>
+      <StateNumber>2333</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
-    <sequence id="37" parent="15" name="workers_person_seq">
-      <ObjectId>25920</ObjectId>
+    <sequence id="37" parent="15" name="workers_id_seq">
+      <ObjectId>30433</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>949</StateNumber>
+      <StateNumber>2333</StateNumber>
       <SequenceIdentity>1</SequenceIdentity>
       <DataType>integer|0s</DataType>
     </sequence>
-    <table id="38" parent="15" name="coordinates">
-      <ObjectId>25845</ObjectId>
+    <sequence id="38" parent="15" name="workers_owner_id_seq">
+      <ObjectId>30435</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2333</StateNumber>
+      <SequenceIdentity>1</SequenceIdentity>
+      <DataType>integer|0s</DataType>
+    </sequence>
+    <table id="39" parent="15" name="coordinates">
+      <ObjectId>30370</ObjectId>
+      <Owner>vadim</Owner>
+      <StateNumber>2330</StateNumber>
     </table>
-    <table id="39" parent="15" name="locations">
-      <ObjectId>25867</ObjectId>
+    <table id="40" parent="15" name="locations">
+      <ObjectId>30388</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>947</StateNumber>
+      <StateNumber>2331</StateNumber>
     </table>
-    <table id="40" parent="15" name="persons">
-      <ObjectId>25892</ObjectId>
+    <table id="41" parent="15" name="persons">
+      <ObjectId>30410</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
     </table>
-    <table id="41" parent="15" name="users">
-      <ObjectId>25063</ObjectId>
+    <table id="42" parent="15" name="users">
+      <ObjectId>30349</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>781</StateNumber>
+      <StateNumber>2330</StateNumber>
     </table>
-    <table id="42" parent="15" name="workers">
-      <ObjectId>25922</ObjectId>
+    <table id="43" parent="15" name="workers">
+      <ObjectId>30439</ObjectId>
       <Owner>vadim</Owner>
-      <StateNumber>949</StateNumber>
+      <StateNumber>2333</StateNumber>
     </table>
-    <column id="43" parent="38" name="id">
+    <column id="44" parent="39" name="id">
       <Position>1</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2330</StateNumber>
       <DefaultExpression>nextval(&apos;coordinates_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="44" parent="38" name="owner_id">
+    <column id="45" parent="39" name="owner_id">
       <Position>2</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2330</StateNumber>
       <DefaultExpression>nextval(&apos;coordinates_owner_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="45" parent="38" name="x">
+    <column id="46" parent="39" name="x">
       <Position>3</Position>
       <DataType>double precision|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2330</StateNumber>
       <TypeId>701</TypeId>
     </column>
-    <column id="46" parent="38" name="y">
+    <column id="47" parent="39" name="y">
       <Position>4</Position>
       <DataType>double precision|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>946</StateNumber>
+      <StateNumber>2330</StateNumber>
       <TypeId>701</TypeId>
     </column>
-    <column id="47" parent="38" name="z">
-      <Position>5</Position>
-      <DataType>double precision|0s</DataType>
-      <StateNumber>946</StateNumber>
-      <TypeId>701</TypeId>
-    </column>
-    <index id="48" parent="38" name="coordinates_pkey">
-      <ObjectId>25856</ObjectId>
-      <StateNumber>946</StateNumber>
+    <index id="48" parent="39" name="coordinates_pkey">
+      <ObjectId>30377</ObjectId>
+      <StateNumber>2330</StateNumber>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
       <Primary>1</Primary>
     </index>
-    <key id="49" parent="38" name="coordinates_pkey">
-      <ObjectId>25857</ObjectId>
-      <StateNumber>946</StateNumber>
+    <key id="49" parent="39" name="coordinates_pkey">
+      <ObjectId>30378</ObjectId>
+      <StateNumber>2330</StateNumber>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>coordinates_pkey</UnderlyingIndexName>
     </key>
-    <foreign-key id="50" parent="38" name="coordinates_owner_id_fkey">
-      <ObjectId>25858</ObjectId>
-      <StateNumber>946</StateNumber>
+    <foreign-key id="50" parent="39" name="coordinates_owner_id_fkey">
+      <ObjectId>30379</ObjectId>
+      <StateNumber>2330</StateNumber>
       <ColNames>owner_id</ColNames>
-      <RefTableId>25063</RefTableId>
+      <RefTableId>30349</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>users</RefTableName>
       <RefKeyName>users_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
     </foreign-key>
-    <check id="51" parent="38" name="coordinates_x_check1">
-      <ObjectId>25851</ObjectId>
-      <StateNumber>946</StateNumber>
+    <check id="51" parent="39" name="coordinates_x_check">
+      <ObjectId>30375</ObjectId>
+      <StateNumber>2330</StateNumber>
       <ColNames>x</ColNames>
-      <Predicate>x &lt;= (500)::double precision</Predicate>
+      <Predicate>x &gt; (&apos;-433&apos;::integer)::double precision</Predicate>
     </check>
-    <check id="52" parent="38" name="coordinates_x_check">
-      <ObjectId>25850</ObjectId>
-      <StateNumber>946</StateNumber>
-      <ColNames>x</ColNames>
-      <Predicate>x &gt;= (&apos;-500&apos;::integer)::double precision</Predicate>
-    </check>
-    <check id="53" parent="38" name="coordinates_y_check1">
-      <ObjectId>25853</ObjectId>
-      <StateNumber>946</StateNumber>
+    <check id="52" parent="39" name="coordinates_y_check">
+      <ObjectId>30376</ObjectId>
+      <StateNumber>2330</StateNumber>
       <ColNames>y</ColNames>
-      <Predicate>y &lt;= (500)::double precision</Predicate>
+      <Predicate>y &gt; (&apos;-501&apos;::integer)::double precision</Predicate>
     </check>
-    <check id="54" parent="38" name="coordinates_y_check">
-      <ObjectId>25852</ObjectId>
-      <StateNumber>946</StateNumber>
-      <ColNames>y</ColNames>
-      <Predicate>y &gt;= (&apos;-500&apos;::integer)::double precision</Predicate>
-    </check>
-    <check id="55" parent="38" name="coordinates_z_check1">
-      <ObjectId>25855</ObjectId>
-      <StateNumber>946</StateNumber>
-      <ColNames>z</ColNames>
-      <Predicate>z &lt;= (500)::double precision</Predicate>
-    </check>
-    <check id="56" parent="38" name="coordinates_z_check">
-      <ObjectId>25854</ObjectId>
-      <StateNumber>946</StateNumber>
-      <ColNames>z</ColNames>
-      <Predicate>z &gt;= (&apos;-500&apos;::integer)::double precision</Predicate>
-    </check>
-    <column id="57" parent="39" name="id">
+    <column id="53" parent="40" name="id">
       <Position>1</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>947</StateNumber>
+      <StateNumber>2331</StateNumber>
       <DefaultExpression>nextval(&apos;locations_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="58" parent="39" name="owner_id">
+    <column id="54" parent="40" name="owner_id">
       <Position>2</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>947</StateNumber>
+      <StateNumber>2331</StateNumber>
       <DefaultExpression>nextval(&apos;locations_owner_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="59" parent="39" name="address">
+    <column id="55" parent="40" name="x">
       <Position>3</Position>
-      <DataType>varchar|0s</DataType>
+      <DataType>bigint|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>947</StateNumber>
-      <TypeId>1043</TypeId>
+      <StateNumber>2331</StateNumber>
+      <TypeId>20</TypeId>
     </column>
-    <column id="60" parent="39" name="latitude">
+    <column id="56" parent="40" name="y">
       <Position>4</Position>
-      <DataType>double precision|0s</DataType>
-      <StateNumber>947</StateNumber>
-      <TypeId>701</TypeId>
+      <DataType>bigint|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2331</StateNumber>
+      <TypeId>20</TypeId>
     </column>
-    <column id="61" parent="39" name="longitude">
+    <column id="57" parent="40" name="z">
       <Position>5</Position>
       <DataType>double precision|0s</DataType>
-      <StateNumber>947</StateNumber>
+      <NotNull>1</NotNull>
+      <StateNumber>2331</StateNumber>
       <TypeId>701</TypeId>
     </column>
-    <index id="62" parent="39" name="locations_pkey">
-      <ObjectId>25881</ObjectId>
-      <StateNumber>947</StateNumber>
+    <column id="58" parent="40" name="name">
+      <Position>6</Position>
+      <DataType>varchar|0s</DataType>
+      <StateNumber>2331</StateNumber>
+      <TypeId>1043</TypeId>
+    </column>
+    <index id="59" parent="40" name="locations_pkey">
+      <ObjectId>30397</ObjectId>
+      <StateNumber>2331</StateNumber>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
       <Primary>1</Primary>
     </index>
-    <key id="63" parent="39" name="locations_pkey">
-      <ObjectId>25882</ObjectId>
-      <StateNumber>947</StateNumber>
+    <key id="60" parent="40" name="locations_pkey">
+      <ObjectId>30398</ObjectId>
+      <StateNumber>2331</StateNumber>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>locations_pkey</UnderlyingIndexName>
     </key>
-    <foreign-key id="64" parent="39" name="locations_owner_id_fkey">
-      <ObjectId>25883</ObjectId>
-      <StateNumber>947</StateNumber>
+    <foreign-key id="61" parent="40" name="locations_owner_id_fkey">
+      <ObjectId>30399</ObjectId>
+      <StateNumber>2331</StateNumber>
       <ColNames>owner_id</ColNames>
-      <RefTableId>25063</RefTableId>
+      <RefTableId>30349</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>users</RefTableName>
       <RefKeyName>users_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
     </foreign-key>
-    <check id="65" parent="39" name="locations_latitude_check1">
-      <ObjectId>25875</ObjectId>
-      <StateNumber>947</StateNumber>
-      <ColNames>latitude</ColNames>
-      <Predicate>latitude &lt;= (85)::double precision</Predicate>
+    <check id="62" parent="40" name="locations_name_check">
+      <ObjectId>30393</ObjectId>
+      <StateNumber>2331</StateNumber>
+      <ColNames>name</ColNames>
+      <Predicate>length((name)::text) &lt;= 461</Predicate>
     </check>
-    <check id="66" parent="39" name="locations_latitude_check">
-      <ObjectId>25874</ObjectId>
-      <StateNumber>947</StateNumber>
-      <ColNames>latitude</ColNames>
-      <Predicate>latitude &gt;= (&apos;-85&apos;::integer)::double precision</Predicate>
-    </check>
-    <check id="67" parent="39" name="locations_address_check1">
-      <ObjectId>25873</ObjectId>
-      <StateNumber>947</StateNumber>
-      <ColNames>address</ColNames>
-      <Predicate>length((address)::text) &lt;= 100</Predicate>
-    </check>
-    <check id="68" parent="39" name="locations_address_check">
-      <ObjectId>25872</ObjectId>
-      <StateNumber>947</StateNumber>
-      <ColNames>address</ColNames>
-      <Predicate>length((address)::text) &gt;= 10</Predicate>
-    </check>
-    <check id="69" parent="39" name="locations_longitude_check1">
-      <ObjectId>25877</ObjectId>
-      <StateNumber>947</StateNumber>
-      <ColNames>longitude</ColNames>
-      <Predicate>longitude &lt;= (180)::double precision</Predicate>
-    </check>
-    <check id="70" parent="39" name="locations_longitude_check">
-      <ObjectId>25876</ObjectId>
-      <StateNumber>947</StateNumber>
-      <ColNames>longitude</ColNames>
-      <Predicate>longitude &gt;= (&apos;-180&apos;::integer)::double precision</Predicate>
-    </check>
-    <column id="71" parent="40" name="id">
+    <column id="63" parent="41" name="id">
       <Position>1</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
       <DefaultExpression>nextval(&apos;persons_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="72" parent="40" name="owner_id">
+    <column id="64" parent="41" name="owner_id">
       <Position>2</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
       <DefaultExpression>nextval(&apos;persons_owner_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="73" parent="40" name="name">
+    <column id="65" parent="41" name="passport_id">
       <Position>3</Position>
       <DataType>varchar|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <column id="74" parent="40" name="passport_id">
+    <column id="66" parent="41" name="eye_color">
       <Position>4</Position>
       <DataType>varchar|0s</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>948</StateNumber>
+      <StateNumber>2332</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <column id="75" parent="40" name="location">
+    <column id="67" parent="41" name="hair_color">
       <Position>5</Position>
-      <DataType>bigint|0s</DataType>
-      <StateNumber>948</StateNumber>
-      <TypeId>20</TypeId>
+      <DataType>varchar|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2332</StateNumber>
+      <TypeId>1043</TypeId>
     </column>
-    <index id="76" parent="40" name="persons_pkey">
-      <ObjectId>25904</ObjectId>
-      <StateNumber>948</StateNumber>
+    <column id="68" parent="41" name="location">
+      <Position>6</Position>
+      <DataType>integer|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2332</StateNumber>
+      <DefaultExpression>nextval(&apos;persons_location_seq&apos;::regclass)</DefaultExpression>
+      <TypeId>23</TypeId>
+    </column>
+    <index id="69" parent="41" name="persons_pkey">
+      <ObjectId>30421</ObjectId>
+      <StateNumber>2332</StateNumber>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
       <Primary>1</Primary>
     </index>
-    <key id="77" parent="40" name="persons_pkey">
-      <ObjectId>25905</ObjectId>
-      <StateNumber>948</StateNumber>
+    <key id="70" parent="41" name="persons_pkey">
+      <ObjectId>30422</ObjectId>
+      <StateNumber>2332</StateNumber>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>persons_pkey</UnderlyingIndexName>
     </key>
-    <foreign-key id="78" parent="40" name="persons_owner_id_fkey">
-      <ObjectId>25911</ObjectId>
-      <StateNumber>948</StateNumber>
+    <foreign-key id="71" parent="41" name="persons_owner_id_fkey">
+      <ObjectId>30428</ObjectId>
+      <StateNumber>2332</StateNumber>
       <ColNames>owner_id</ColNames>
-      <RefTableId>25063</RefTableId>
+      <RefTableId>30349</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>users</RefTableName>
       <RefKeyName>users_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
     </foreign-key>
-    <foreign-key id="79" parent="40" name="persons_location_fkey">
-      <ObjectId>25906</ObjectId>
-      <StateNumber>948</StateNumber>
+    <foreign-key id="72" parent="41" name="persons_location_fkey">
+      <ObjectId>30423</ObjectId>
+      <StateNumber>2332</StateNumber>
       <ColNames>location</ColNames>
-      <RefTableId>25867</RefTableId>
+      <RefTableId>30388</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>locations</RefTableName>
       <RefKeyName>locations_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
     </foreign-key>
-    <check id="80" parent="40" name="persons_name_check1">
-      <ObjectId>25898</ObjectId>
-      <StateNumber>948</StateNumber>
-      <ColNames>name</ColNames>
-      <Predicate>length((name)::text) &lt;= 100</Predicate>
-    </check>
-    <check id="81" parent="40" name="persons_name_check">
-      <ObjectId>25897</ObjectId>
-      <StateNumber>948</StateNumber>
-      <ColNames>name</ColNames>
-      <Predicate>length((name)::text) &gt;= 2</Predicate>
-    </check>
-    <check id="82" parent="40" name="persons_passport_id_check1">
-      <ObjectId>25900</ObjectId>
-      <StateNumber>948</StateNumber>
+    <check id="73" parent="41" name="persons_passport_id_check1">
+      <ObjectId>30417</ObjectId>
+      <StateNumber>2332</StateNumber>
       <ColNames>passport_id</ColNames>
-      <Predicate>length((passport_id)::text) &lt;= 40</Predicate>
+      <Predicate>length((passport_id)::text) &lt;= 44</Predicate>
     </check>
-    <check id="83" parent="40" name="persons_passport_id_check">
-      <ObjectId>25899</ObjectId>
-      <StateNumber>948</StateNumber>
+    <check id="74" parent="41" name="persons_passport_id_check">
+      <ObjectId>30416</ObjectId>
+      <StateNumber>2332</StateNumber>
       <ColNames>passport_id</ColNames>
       <Predicate>length((passport_id)::text) &gt;= 10</Predicate>
     </check>
-    <column id="84" parent="41" name="id">
+    <column id="75" parent="42" name="id">
       <Position>1</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>780</StateNumber>
+      <StateNumber>2329</StateNumber>
       <DefaultExpression>nextval(&apos;users_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="85" parent="41" name="name">
+    <column id="76" parent="42" name="name">
       <Position>2</Position>
       <DataType>varchar|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>780</StateNumber>
+      <StateNumber>2329</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <column id="86" parent="41" name="login">
+    <column id="77" parent="42" name="login">
       <Position>3</Position>
       <DataType>varchar|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>780</StateNumber>
+      <StateNumber>2329</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <column id="87" parent="41" name="password">
+    <column id="78" parent="42" name="password">
       <Position>4</Position>
       <DataType>varchar|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>780</StateNumber>
+      <StateNumber>2329</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <column id="88" parent="41" name="role">
+    <column id="79" parent="42" name="role">
       <Position>5</Position>
       <DataType>varchar|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>780</StateNumber>
+      <StateNumber>2329</StateNumber>
       <TypeId>1043</TypeId>
     </column>
-    <index id="89" parent="41" name="users_pkey">
-      <ObjectId>25076</ObjectId>
-      <StateNumber>780</StateNumber>
+    <index id="80" parent="42" name="users_pkey">
+      <ObjectId>30362</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
       <Primary>1</Primary>
     </index>
-    <index id="90" parent="41" name="users_login_key">
-      <ObjectId>25078</ObjectId>
-      <StateNumber>780</StateNumber>
+    <index id="81" parent="42" name="users_login_key">
+      <ObjectId>30364</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>login</ColNames>
       <Unique>1</Unique>
     </index>
-    <key id="91" parent="41" name="users_pkey">
-      <ObjectId>25077</ObjectId>
-      <StateNumber>780</StateNumber>
+    <key id="82" parent="42" name="users_pkey">
+      <ObjectId>30363</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>users_pkey</UnderlyingIndexName>
     </key>
-    <key id="92" parent="41" name="users_login_key">
-      <ObjectId>25079</ObjectId>
-      <StateNumber>780</StateNumber>
+    <key id="83" parent="42" name="users_login_key">
+      <ObjectId>30365</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>login</ColNames>
       <UnderlyingIndexName>users_login_key</UnderlyingIndexName>
     </key>
-    <check id="93" parent="41" name="users_login_check1">
-      <ObjectId>25070</ObjectId>
-      <StateNumber>780</StateNumber>
+    <check id="84" parent="42" name="users_login_check1">
+      <ObjectId>30356</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>login</ColNames>
       <Predicate>length((login)::text) &lt;= 100</Predicate>
     </check>
-    <check id="94" parent="41" name="users_login_check">
-      <ObjectId>25069</ObjectId>
-      <StateNumber>780</StateNumber>
+    <check id="85" parent="42" name="users_login_check">
+      <ObjectId>30355</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>login</ColNames>
       <Predicate>length((login)::text) &gt;= 2</Predicate>
     </check>
-    <check id="95" parent="41" name="users_name_check1">
-      <ObjectId>25068</ObjectId>
-      <StateNumber>780</StateNumber>
+    <check id="86" parent="42" name="users_name_check1">
+      <ObjectId>30354</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>name</ColNames>
       <Predicate>length((name)::text) &lt;= 100</Predicate>
     </check>
-    <check id="96" parent="41" name="users_name_check">
-      <ObjectId>25067</ObjectId>
-      <StateNumber>780</StateNumber>
+    <check id="87" parent="42" name="users_name_check">
+      <ObjectId>30353</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>name</ColNames>
       <Predicate>length((name)::text) &gt;= 2</Predicate>
     </check>
-    <check id="97" parent="41" name="users_password_check1">
-      <ObjectId>25072</ObjectId>
-      <StateNumber>780</StateNumber>
+    <check id="88" parent="42" name="users_password_check1">
+      <ObjectId>30358</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>password</ColNames>
       <Predicate>length((password)::text) &lt;= 100</Predicate>
     </check>
-    <check id="98" parent="41" name="users_password_check">
-      <ObjectId>25071</ObjectId>
-      <StateNumber>780</StateNumber>
+    <check id="89" parent="42" name="users_password_check">
+      <ObjectId>30357</ObjectId>
+      <StateNumber>2329</StateNumber>
       <ColNames>password</ColNames>
       <Predicate>length((password)::text) &gt;= 8</Predicate>
     </check>
-    <column id="99" parent="42" name="id">
+    <column id="90" parent="43" name="id">
       <Position>1</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>949</StateNumber>
+      <StateNumber>2333</StateNumber>
       <DefaultExpression>nextval(&apos;workers_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="100" parent="42" name="owner_id">
+    <column id="91" parent="43" name="owner_id">
       <Position>2</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>949</StateNumber>
+      <StateNumber>2333</StateNumber>
       <DefaultExpression>nextval(&apos;workers_owner_id_seq&apos;::regclass)</DefaultExpression>
       <TypeId>23</TypeId>
     </column>
-    <column id="101" parent="42" name="creation_date">
+    <column id="92" parent="43" name="key">
       <Position>3</Position>
-      <DataType>timestamp with time zone|0s</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>949</StateNumber>
-      <TypeId>1184</TypeId>
-    </column>
-    <column id="102" parent="42" name="salary">
-      <Position>4</Position>
-      <DataType>real|0s</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>949</StateNumber>
-      <TypeId>700</TypeId>
-    </column>
-    <column id="103" parent="42" name="status">
-      <Position>5</Position>
-      <DataType>varchar|0s</DataType>
-      <StateNumber>949</StateNumber>
-      <TypeId>1043</TypeId>
-    </column>
-    <column id="104" parent="42" name="start_date">
-      <Position>6</Position>
-      <DataType>timestamp with time zone|0s</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>949</StateNumber>
-      <TypeId>1184</TypeId>
-    </column>
-    <column id="105" parent="42" name="end_date">
-      <Position>7</Position>
-      <DataType>timestamp with time zone|0s</DataType>
-      <StateNumber>949</StateNumber>
-      <TypeId>1184</TypeId>
-    </column>
-    <column id="106" parent="42" name="coordinates">
-      <Position>8</Position>
-      <DataType>bigint|0s</DataType>
-      <StateNumber>949</StateNumber>
-      <TypeId>20</TypeId>
-    </column>
-    <column id="107" parent="42" name="person">
-      <Position>9</Position>
       <DataType>integer|0s</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>949</StateNumber>
-      <DefaultExpression>nextval(&apos;workers_person_seq&apos;::regclass)</DefaultExpression>
+      <StateNumber>2333</StateNumber>
       <TypeId>23</TypeId>
     </column>
-    <index id="108" parent="42" name="workers_pkey">
-      <ObjectId>25932</ObjectId>
-      <StateNumber>949</StateNumber>
+    <column id="93" parent="43" name="name">
+      <Position>4</Position>
+      <DataType>varchar|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2333</StateNumber>
+      <TypeId>1043</TypeId>
+    </column>
+    <column id="94" parent="43" name="coordinates">
+      <Position>5</Position>
+      <DataType>integer|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2333</StateNumber>
+      <DefaultExpression>nextval(&apos;workers_coordinates_seq&apos;::regclass)</DefaultExpression>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="95" parent="43" name="creation_date">
+      <Position>6</Position>
+      <DataType>date|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2333</StateNumber>
+      <TypeId>1082</TypeId>
+    </column>
+    <column id="96" parent="43" name="salary">
+      <Position>7</Position>
+      <DataType>double precision|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2333</StateNumber>
+      <TypeId>701</TypeId>
+    </column>
+    <column id="97" parent="43" name="start_date">
+      <Position>8</Position>
+      <DataType>timestamp|0s</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>2333</StateNumber>
+      <TypeId>1114</TypeId>
+    </column>
+    <column id="98" parent="43" name="end_date">
+      <Position>9</Position>
+      <DataType>timestamp|0s</DataType>
+      <StateNumber>2333</StateNumber>
+      <TypeId>1114</TypeId>
+    </column>
+    <column id="99" parent="43" name="status">
+      <Position>10</Position>
+      <DataType>varchar|0s</DataType>
+      <StateNumber>2333</StateNumber>
+      <TypeId>1043</TypeId>
+    </column>
+    <column id="100" parent="43" name="person">
+      <Position>11</Position>
+      <DataType>bigint|0s</DataType>
+      <StateNumber>2333</StateNumber>
+      <TypeId>20</TypeId>
+    </column>
+    <index id="101" parent="43" name="workers_pkey">
+      <ObjectId>30451</ObjectId>
+      <StateNumber>2333</StateNumber>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
       <Primary>1</Primary>
     </index>
-    <key id="109" parent="42" name="workers_pkey">
-      <ObjectId>25933</ObjectId>
-      <StateNumber>949</StateNumber>
+    <index id="102" parent="43" name="workers_key_key">
+      <ObjectId>30453</ObjectId>
+      <StateNumber>2333</StateNumber>
+      <ColNames>key</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <key id="103" parent="43" name="workers_pkey">
+      <ObjectId>30452</ObjectId>
+      <StateNumber>2333</StateNumber>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
       <UnderlyingIndexName>workers_pkey</UnderlyingIndexName>
     </key>
-    <foreign-key id="110" parent="42" name="workers_owner_id_fkey">
-      <ObjectId>25944</ObjectId>
-      <StateNumber>949</StateNumber>
+    <key id="104" parent="43" name="workers_key_key">
+      <ObjectId>30454</ObjectId>
+      <StateNumber>2333</StateNumber>
+      <ColNames>key</ColNames>
+      <UnderlyingIndexName>workers_key_key</UnderlyingIndexName>
+    </key>
+    <foreign-key id="105" parent="43" name="workers_owner_id_fkey">
+      <ObjectId>30465</ObjectId>
+      <StateNumber>2333</StateNumber>
       <ColNames>owner_id</ColNames>
-      <RefTableId>25063</RefTableId>
+      <RefTableId>30349</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>users</RefTableName>
       <RefKeyName>users_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
     </foreign-key>
-    <foreign-key id="111" parent="42" name="workers_coordinates_fkey">
-      <ObjectId>25934</ObjectId>
-      <StateNumber>949</StateNumber>
+    <foreign-key id="106" parent="43" name="workers_coordinates_fkey">
+      <ObjectId>30460</ObjectId>
+      <StateNumber>2333</StateNumber>
       <ColNames>coordinates</ColNames>
-      <RefTableId>25845</RefTableId>
+      <RefTableId>30370</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>coordinates</RefTableName>
       <RefKeyName>coordinates_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
     </foreign-key>
-    <foreign-key id="112" parent="42" name="workers_person_fkey">
-      <ObjectId>25939</ObjectId>
-      <StateNumber>949</StateNumber>
+    <foreign-key id="107" parent="43" name="workers_person_fkey">
+      <ObjectId>30455</ObjectId>
+      <StateNumber>2333</StateNumber>
       <ColNames>person</ColNames>
-      <RefTableId>25892</RefTableId>
+      <RefTableId>30410</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>persons</RefTableName>
       <RefKeyName>persons_pkey</RefKeyName>
       <RefColNames>id</RefColNames>
     </foreign-key>
-    <check id="113" parent="42" name="workers_salary_check">
-      <ObjectId>25928</ObjectId>
-      <StateNumber>949</StateNumber>
+    <check id="108" parent="43" name="workers_key_check">
+      <ObjectId>30445</ObjectId>
+      <StateNumber>2333</StateNumber>
+      <ColNames>key</ColNames>
+      <Predicate>key &gt; 0</Predicate>
+    </check>
+    <check id="109" parent="43" name="workers_name_check">
+      <ObjectId>30446</ObjectId>
+      <StateNumber>2333</StateNumber>
+      <ColNames>name</ColNames>
+      <Predicate>length((name)::text) &gt;= 0</Predicate>
+    </check>
+    <check id="110" parent="43" name="workers_salary_check">
+      <ObjectId>30447</ObjectId>
+      <StateNumber>2333</StateNumber>
       <ColNames>salary</ColNames>
       <Predicate>salary &gt; (0)::double precision</Predicate>
     </check>

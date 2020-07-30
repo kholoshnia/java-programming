@@ -13,16 +13,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Former extends ArgumentFormer {
+  private static final Logger logger = LogManager.getLogger(Former.class);
+
   protected final Console console;
   protected final CommandMediator commandMediator;
-  private final Logger logger;
+
   private final Map<String, ArgumentValidator> validatorMap;
 
   public Former(
       CommandMediator commandMediator,
       Console console,
       Map<String, ArgumentValidator> validatorMap) {
-    logger = LogManager.getLogger(Former.class);
     this.console = console;
     this.commandMediator = commandMediator;
     this.validatorMap = validatorMap;
@@ -31,7 +32,7 @@ public abstract class Former extends ArgumentFormer {
   /**
    * Checks input according to the specified argument.
    *
-   * @param argument concrete argument
+   * @param argument command argument
    * @param input user input
    * @throws ValidationException - if specified argument is wrong
    */
@@ -51,17 +52,17 @@ public abstract class Former extends ArgumentFormer {
    * @throws CancelException - if forming was canceled
    */
   protected final boolean readArgumentQuestion(String question) throws CancelException {
-    String input;
-
     while (true) {
       console.write(String.format("%s [y/n]: ", question));
-      input = console.readLine(null, null);
+      logger.info(() -> "Asked y/n question.");
+
+      String input = console.readLine(null, null);
 
       if (input == null) {
         continue;
       }
 
-      if (input.equals(commandMediator.EXIT)) {
+      if (input.equals(commandMediator.exit)) {
         throw new CancelException();
       }
 
@@ -95,7 +96,7 @@ public abstract class Former extends ArgumentFormer {
 
       String input = console.readLine(prompt, mask).trim();
 
-      if (input.equals(commandMediator.EXIT)) {
+      if (input.equals(commandMediator.exit)) {
         throw new CancelException();
       }
 

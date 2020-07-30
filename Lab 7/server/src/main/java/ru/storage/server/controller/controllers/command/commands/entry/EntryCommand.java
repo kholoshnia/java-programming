@@ -13,8 +13,8 @@ import java.util.Map;
 
 public abstract class EntryCommand extends Command {
   protected final Locale locale;
-  protected final HashGenerator hashGenerator;
   protected final Repository<User> userRepository;
+  protected final HashGenerator hashGenerator;
   protected final Key key;
   protected final String subject;
 
@@ -23,13 +23,13 @@ public abstract class EntryCommand extends Command {
       ArgumentMediator argumentMediator,
       Map<String, String> arguments,
       Locale locale,
-      HashGenerator hashGenerator,
       Repository<User> userRepository,
+      HashGenerator hashGenerator,
       Key key) {
     super(configuration, argumentMediator, arguments);
     this.locale = locale;
-    this.hashGenerator = hashGenerator;
     this.userRepository = userRepository;
+    this.hashGenerator = hashGenerator;
     this.key = key;
     subject = configuration.getString("jwt.subject");
   }

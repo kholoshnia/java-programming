@@ -25,33 +25,32 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 public class RegisterCommand extends EntryCommand {
-  public final String USER_ALREADY_REGISTERED_ANSWER;
-  private final String REGISTERED_ANSWER;
+  private static final Logger logger = LogManager.getLogger(RegisterCommand.class);
 
-  private final Logger logger;
+  private final String userAlreadyRegisteredAnswer;
+  private final String registeredAnswer;
 
   public RegisterCommand(
       Configuration configuration,
       ArgumentMediator argumentMediator,
       Map<String, String> arguments,
       Locale locale,
-      HashGenerator hashGenerator,
       Repository<User> userRepository,
+      HashGenerator hashGenerator,
       Key key) {
-    super(configuration, argumentMediator, arguments, locale, hashGenerator, userRepository, key);
-    logger = LogManager.getLogger(RegisterCommand.class);
+    super(configuration, argumentMediator, arguments, locale, userRepository, hashGenerator, key);
 
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.RegisterCommand", locale);
 
-    USER_ALREADY_REGISTERED_ANSWER = resourceBundle.getString("answers.alreadyRegistered");
-    REGISTERED_ANSWER = resourceBundle.getString("answers.registered");
+    userAlreadyRegisteredAnswer = resourceBundle.getString("answers.alreadyRegistered");
+    registeredAnswer = resourceBundle.getString("answers.registered");
   }
 
   @Override
   public Response executeCommand() {
-    String name = arguments.get(argumentMediator.USER_NAME);
-    String login = arguments.get(argumentMediator.USER_LOGIN);
-    String password = arguments.get(argumentMediator.USER_PASSWORD);
+    String name = arguments.get(argumentMediator.userName);
+    String login = arguments.get(argumentMediator.userLogin);
+    String password = arguments.get(argumentMediator.userPassword);
 
     Query<User> query = new GetEqualsLoginUsers(login);
     List<User> equalLoginUsers;
@@ -59,13 +58,16 @@ public class RegisterCommand extends EntryCommand {
     try {
       equalLoginUsers = userRepository.get(query);
     } catch (RepositoryException e) {
-      logger.error("Cannot get users with login equal to {}.", (Supplier<?>) () -> login, e);
+      logger.error(
+          "Cannot get users with login equal to {} to continue registration.",
+          (Supplier<?>) () -> login,
+          e);
       return new Response(Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     if (!equalLoginUsers.isEmpty()) {
       logger.warn("User with specified login: {} is already registered.", () -> login);
-      return new Response(Status.NOT_FOUND, USER_ALREADY_REGISTERED_ANSWER);
+      return new Response(Status.NOT_FOUND, userAlreadyRegisteredAnswer);
     }
 
     String hashedPassword;
@@ -94,8 +96,8 @@ public class RegisterCommand extends EntryCommand {
     }
 
     String jws = Jwts.builder().setSubject(subject).signWith(key).compact();
-    logger.warn(() -> "Json web signature was created.");
+    logger.info(() -> "Json web signature was created.");
 
-    return new Response(Status.OK, REGISTERED_ANSWER, jws);
+    return new Response(Status.OK, registeredAnswer, jws);
   }
 }

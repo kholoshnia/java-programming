@@ -3,48 +3,58 @@ package ru.storage.server.controller.services.script.scriptExecutor;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Supplier;
 import ru.storage.common.transfer.response.Response;
 import ru.storage.common.transfer.response.Status;
 import ru.storage.server.controller.controllers.command.Command;
 import ru.storage.server.controller.controllers.command.factory.CommandFactory;
 import ru.storage.server.controller.controllers.command.factory.exceptions.CommandFactoryException;
+import ru.storage.server.controller.controllers.command.factory.exceptions.UserNotFoundException;
 import ru.storage.server.controller.services.script.Script;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.ArgumentFormer;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.FormerMediator;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.exceptions.FormingException;
 import ru.storage.server.controller.services.script.scriptExecutor.argumentFormer.exceptions.WrongArgumentsException;
+import ru.storage.server.model.domain.history.History;
+import ru.storage.server.model.domain.history.Record;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ScriptExecutor {
-  private static final String ERROR_NEAR_PATTERN = "%s: %d %s - %s";
+  private static final Logger logger = LogManager.getLogger(ScriptExecutor.class);
 
-  private static final String COMMAND_CREATION_ERROR_ANSWER;
-  private static final String GOT_NULL_COMMAND_ANSWER;
+  private static final String ERROR_NEAR_PATTERN = "%s: %d \"%s\" - %s";
 
-  static {
-    ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.ScriptExecutor");
-
-    COMMAND_CREATION_ERROR_ANSWER = resourceBundle.getString("answers.commandCreationError");
-    GOT_NULL_COMMAND_ANSWER = resourceBundle.getString("answers.gotNullCommand");
-  }
-
-  private final Logger logger;
   private final Pattern regex;
+  private final List<Integer> scriptList;
   private final Map<String, CommandFactory> commandFactoryMap;
   private final FormerMediator formerMediator;
+  private final History history;
   private final List<Status> stopStatuses;
+
+  private String scriptStartPrefix;
+  private String errorArLinePrefix;
+  private String scriptEndPrefix;
+
+  private String alreadyExecutedAnswer;
+  private String noSuchCommandAnswer;
+  private String userNotFoundAnswer;
+  private String commandCreationErrorAnswer;
+  private String commandNotSupportedAnswer;
 
   @Inject
   public ScriptExecutor(
-      Map<String, CommandFactory> commandFactoryMap, FormerMediator formerMediator) {
-    logger = LogManager.getLogger(ScriptExecutor.class);
+      Map<String, CommandFactory> commandFactoryMap,
+      FormerMediator formerMediator,
+      History history) {
     regex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
     this.commandFactoryMap = commandFactoryMap;
     this.formerMediator = formerMediator;
+    this.history = history;
     stopStatuses = initStopStatuses();
+    scriptList = new ArrayList<>();
   }
 
   private List<Status> initStopStatuses() {
@@ -56,28 +66,45 @@ public final class ScriptExecutor {
     };
   }
 
+  private void changeLocale(Locale locale) {
+    ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.ScriptExecutor", locale);
+
+    scriptStartPrefix = resourceBundle.getString("prefixes.scriptStart");
+    errorArLinePrefix = resourceBundle.getString("prefixes.errorAtLine");
+    scriptEndPrefix = resourceBundle.getString("prefixes.scriptEnd");
+
+    alreadyExecutedAnswer = resourceBundle.getString("answers.alreadyExecuted");
+    noSuchCommandAnswer = resourceBundle.getString("answers.noSuchCommand");
+    userNotFoundAnswer = resourceBundle.getString("answers.userNotFound");
+    commandCreationErrorAnswer = resourceBundle.getString("answers.commandCreationError");
+    commandNotSupportedAnswer = resourceBundle.getString("answers.commandNotSupported");
+  }
+
   /**
-   * Executes {@link Script}
+   * Executes {@link Script}.
    *
    * @param script script to execute
    * @return execution response
    */
   public Response execute(Script script) {
-    ResourceBundle resourceBundle =
-        ResourceBundle.getBundle("localized.ScriptExecutor", script.getLocale());
-    String noSuchCommandAnswer = resourceBundle.getString("answers.noSuchCommand");
-    String errorNear = resourceBundle.getString("answers.errorNear");
+    changeLocale(script.getLocale());
+
+    Integer hash = script.hashCode();
+    if (scriptList.contains(hash)) {
+      logger.error(() -> "Script was already executed, recursion detected.");
+      scriptList.remove(hash);
+      return new Response(Status.BAD_REQUEST, alreadyExecutedAnswer);
+    }
+    scriptList.add(hash);
 
     StringBuilder answer =
         new StringBuilder()
-            .append(resourceBundle.getString("prefixes.scriptStart"))
+            .append(scriptStartPrefix)
+            .append(System.lineSeparator())
             .append(System.lineSeparator());
-    Iterator<String> iterator = script.iterator();
 
-    int counter = 0;
-    while (iterator.hasNext()) {
-      counter++;
-      String line = iterator.next();
+    while (script.hasNext()) {
+      String line = script.nextLine();
 
       List<String> words = parse(line);
 
@@ -98,30 +125,43 @@ public final class ScriptExecutor {
 
       if (argumentFormer == null) {
         logger.error(() -> "There is no such command, factory was not created.");
-
+        scriptList.remove(hash);
         return new Response(
             Status.BAD_REQUEST,
-            String.format("%s: %d %s - %s", errorNear, counter, line, noSuchCommandAnswer));
+            String.format(
+                ERROR_NEAR_PATTERN,
+                errorArLinePrefix,
+                script.getCurrent(),
+                line,
+                noSuchCommandAnswer));
       }
 
       Map<String, String> allArguments;
 
       try {
-        allArguments = argumentFormer.formArguments(arguments, iterator);
+        allArguments = argumentFormer.formArguments(arguments, script);
       } catch (WrongArgumentsException | FormingException e) {
+        logger.error(() -> "Wrong command arguments.", e);
+        scriptList.remove(hash);
         return new Response(
             Status.BAD_REQUEST,
-            String.format(ERROR_NEAR_PATTERN, errorNear, counter, line, e.getMessage()));
+            String.format(
+                ERROR_NEAR_PATTERN, errorArLinePrefix, script.getCurrent(), line, e.getMessage()));
       }
 
       CommandFactory commandFactory = commandFactoryMap.get(commandName);
 
       if (commandFactory == null) {
         logger.error(() -> "There is no such command, factory was not created.");
-
+        scriptList.remove(hash);
         return new Response(
             Status.BAD_REQUEST,
-            String.format(ERROR_NEAR_PATTERN, errorNear, counter, line, noSuchCommandAnswer));
+            String.format(
+                ERROR_NEAR_PATTERN,
+                errorArLinePrefix,
+                script.getCurrent(),
+                line,
+                noSuchCommandAnswer));
       }
 
       Command command;
@@ -130,31 +170,49 @@ public final class ScriptExecutor {
         command =
             commandFactory.createCommand(
                 commandName, allArguments, script.getLocale(), script.getUser().getLogin());
+      } catch (UserNotFoundException e) {
+        logger.warn(() -> "User was not found", e);
+        scriptList.remove(hash);
+        return new Response(Status.NOT_FOUND, userNotFoundAnswer);
       } catch (CommandFactoryException e) {
-        return new Response(Status.INTERNAL_SERVER_ERROR, COMMAND_CREATION_ERROR_ANSWER);
+        logger.error("Cannot create command: {}.", (Supplier<?>) () -> commandName, e);
+        scriptList.remove(hash);
+        return new Response(Status.INTERNAL_SERVER_ERROR, commandCreationErrorAnswer);
       }
 
       if (command == null) {
         logger.error(() -> "Got null command factory.");
-        return new Response(Status.INTERNAL_SERVER_ERROR, GOT_NULL_COMMAND_ANSWER);
+        scriptList.remove(hash);
+        return new Response(Status.INTERNAL_SERVER_ERROR, commandNotSupportedAnswer);
       }
 
       Response response = command.executeCommand();
+
+      history.addRecord(new Record(commandName, allArguments, response));
 
       if (!stopStatuses.contains(response.getStatus())) {
         answer
             .append(String.format("%s %s:", commandName, response.getStatus()))
             .append(System.lineSeparator())
             .append(response.getAnswer())
+            .append(System.lineSeparator())
             .append(System.lineSeparator());
       } else {
+        scriptList.remove(hash);
         return new Response(
             response.getStatus(),
-            String.format(ERROR_NEAR_PATTERN, errorNear, counter, line, response.getAnswer()));
+            String.format(
+                ERROR_NEAR_PATTERN,
+                errorArLinePrefix,
+                script.getCurrent(),
+                line,
+                response.getAnswer()));
       }
     }
 
-    answer.append(resourceBundle.getString("prefixes.scriptEnd"));
+    answer.append(scriptEndPrefix);
+    scriptList.remove(hash);
+    logger.info(() -> "Script was executed.");
     return new Response(Status.OK, answer.toString());
   }
 
@@ -162,7 +220,7 @@ public final class ScriptExecutor {
    * Parses string by words in a list of string. Words can be separated by spaces or can be
    * surrounded by " and ' symbols. NOTE: returns empty list if there is no words found.
    *
-   * @param string concrete string to parse
+   * @param string string to parse
    * @return list of words from string
    */
   private List<String> parse(String string) {

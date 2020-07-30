@@ -5,11 +5,10 @@ import org.apache.commons.configuration2.Configuration;
 import ru.storage.common.ArgumentMediator;
 import ru.storage.common.CommandMediator;
 import ru.storage.server.controller.controllers.command.Command;
-import ru.storage.server.controller.controllers.command.commands.view.InfoCommand;
-import ru.storage.server.controller.controllers.command.commands.view.ShowCommand;
-import ru.storage.server.controller.controllers.command.commands.view.ViewCommand;
+import ru.storage.server.controller.controllers.command.commands.view.*;
 import ru.storage.server.controller.controllers.command.factory.CommandFactory;
 import ru.storage.server.controller.controllers.command.factory.exceptions.CommandFactoryException;
+import ru.storage.server.controller.services.parser.Parser;
 import ru.storage.server.model.domain.repository.repositories.workerRepository.WorkerRepository;
 
 import java.lang.reflect.Constructor;
@@ -19,7 +18,11 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class ViewCommandFactory extends CommandFactory {
+  private final Configuration configuration;
+  private final ArgumentMediator argumentMediator;
   private final WorkerRepository workerRepository;
+  private final Parser parser;
+
   private final Map<String, Class<? extends ViewCommand>> viewCommandMap;
 
   @Inject
@@ -27,9 +30,12 @@ public final class ViewCommandFactory extends CommandFactory {
       Configuration configuration,
       ArgumentMediator argumentMediator,
       CommandMediator commandMediator,
-      WorkerRepository workerRepository) {
-    super(configuration, argumentMediator);
+      WorkerRepository workerRepository,
+      Parser parser) {
+    this.configuration = configuration;
+    this.argumentMediator = argumentMediator;
     this.workerRepository = workerRepository;
+    this.parser = parser;
     viewCommandMap = initViewCommandMap(commandMediator);
   }
 
@@ -37,8 +43,11 @@ public final class ViewCommandFactory extends CommandFactory {
       CommandMediator commandMediator) {
     return new HashMap<String, Class<? extends ViewCommand>>() {
       {
-        put(commandMediator.INFO, InfoCommand.class);
-        put(commandMediator.SHOW, ShowCommand.class);
+        put(commandMediator.info, InfoCommand.class);
+        put(commandMediator.show, ShowCommand.class);
+        put(commandMediator.printAscending, PrintAscendingCommand.class);
+        put(commandMediator.minByName, MinByNameCommand.class);
+        put(commandMediator.countLessThanStartDate, CountLessThanStartDateCommand.class);
       }
     };
   }
@@ -48,6 +57,7 @@ public final class ViewCommandFactory extends CommandFactory {
       String command, Map<String, String> arguments, Locale locale, String login)
       throws CommandFactoryException {
     Class<? extends ViewCommand> clazz = viewCommandMap.get(command);
+
     try {
       Constructor<? extends ViewCommand> constructor =
           clazz.getConstructor(
@@ -55,9 +65,11 @@ public final class ViewCommandFactory extends CommandFactory {
               ArgumentMediator.class,
               Map.class,
               Locale.class,
-              WorkerRepository.class);
+              WorkerRepository.class,
+              Parser.class);
+
       return constructor.newInstance(
-          configuration, argumentMediator, arguments, locale, workerRepository);
+          configuration, argumentMediator, arguments, locale, workerRepository, parser);
     } catch (NoSuchMethodException
         | InstantiationException
         | IllegalAccessException

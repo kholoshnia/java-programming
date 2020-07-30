@@ -5,10 +5,7 @@ import org.apache.commons.configuration2.Configuration;
 import ru.storage.common.ArgumentMediator;
 import ru.storage.common.CommandMediator;
 import ru.storage.server.controller.controllers.command.Command;
-import ru.storage.server.controller.controllers.command.commands.modification.AddCommand;
-import ru.storage.server.controller.controllers.command.commands.modification.ModificationCommand;
-import ru.storage.server.controller.controllers.command.commands.modification.RemoveCommand;
-import ru.storage.server.controller.controllers.command.commands.modification.UpdateCommand;
+import ru.storage.server.controller.controllers.command.commands.modification.*;
 import ru.storage.server.controller.controllers.command.factory.CommandFactory;
 import ru.storage.server.controller.controllers.command.factory.exceptions.CommandFactoryException;
 import ru.storage.server.controller.services.parser.Parser;
@@ -23,9 +20,12 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class ModificationCommandFactory extends CommandFactory {
-  private final Repository<User> userRepository;
+  private final Configuration configuration;
+  private final ArgumentMediator argumentMediator;
   private final Repository<Worker> workerRepository;
+  private final Repository<User> userRepository;
   private final Parser parser;
+
   private final Map<String, Class<? extends ModificationCommand>> modificationCommandMap;
 
   @Inject
@@ -33,10 +33,11 @@ public final class ModificationCommandFactory extends CommandFactory {
       Configuration configuration,
       ArgumentMediator argumentMediator,
       CommandMediator commandMediator,
-      Repository<User> userRepository,
       Repository<Worker> workerRepository,
+      Repository<User> userRepository,
       Parser parser) {
-    super(configuration, argumentMediator);
+    this.configuration = configuration;
+    this.argumentMediator = argumentMediator;
     this.userRepository = userRepository;
     this.workerRepository = workerRepository;
     this.parser = parser;
@@ -47,9 +48,12 @@ public final class ModificationCommandFactory extends CommandFactory {
       CommandMediator commandMediator) {
     return new HashMap<String, Class<? extends ModificationCommand>>() {
       {
-        put(commandMediator.ADD, AddCommand.class);
-        put(commandMediator.UPDATE, UpdateCommand.class);
-        put(commandMediator.REMOVE, RemoveCommand.class);
+        put(commandMediator.insert, InsertCommand.class);
+        put(commandMediator.update, UpdateCommand.class);
+        put(commandMediator.removeKey, RemoveKeyCommand.class);
+        put(commandMediator.clear, ClearCommand.class);
+        put(commandMediator.removeLower, RemoveLowerCommand.class);
+        put(commandMediator.replaceIfLower, ReplaceIfLowerCommand.class);
       }
     };
   }
@@ -59,6 +63,7 @@ public final class ModificationCommandFactory extends CommandFactory {
       String command, Map<String, String> arguments, Locale locale, String login)
       throws CommandFactoryException {
     Class<? extends ModificationCommand> clazz = modificationCommandMap.get(command);
+
     try {
       Constructor<? extends ModificationCommand> constructor =
           clazz.getConstructor(
@@ -69,6 +74,7 @@ public final class ModificationCommandFactory extends CommandFactory {
               Repository.class,
               Parser.class,
               User.class);
+
       return constructor.newInstance(
           configuration,
           argumentMediator,

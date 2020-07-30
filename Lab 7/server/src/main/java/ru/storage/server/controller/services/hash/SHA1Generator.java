@@ -12,29 +12,28 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public final class SHA256Generator extends HashGenerator {
-  private final Logger logger;
+public final class SHA1Generator extends HashGenerator {
+  private static final Logger logger = LogManager.getLogger(SHA1Generator.class);
 
   @Inject
-  public SHA256Generator(@Nonnull Configuration configuration) {
+  public SHA1Generator(@Nonnull Configuration configuration) {
     super(configuration);
-    logger = LogManager.getLogger(SHA256Generator.class);
   }
 
   @Override
   protected String hash(@Nonnull String string) throws HashGeneratorException {
-    String sha256;
+    String sha1;
 
     try {
-      MessageDigest msdDigest = MessageDigest.getInstance("SHA-256");
+      MessageDigest msdDigest = MessageDigest.getInstance("SHA-1");
       msdDigest.update(string.getBytes(StandardCharsets.UTF_8), 0, string.length());
-      sha256 = DatatypeConverter.printHexBinary(msdDigest.digest());
+      sha1 = DatatypeConverter.printHexBinary(msdDigest.digest());
     } catch (NoSuchAlgorithmException e) {
-      logger.fatal(() -> "An exception was caught during the work of SHA-256 hash generator.", e);
+      logger.fatal(() -> "An exception was caught during the work of SHA-1 hash generator.", e);
       throw new HashGeneratorException(e);
     }
 
-    logger.info(() -> "SHA-256 hash was generated.");
-    return sha256;
+    logger.info(() -> "SHA-1 hash was generated.");
+    return sha1;
   }
 }

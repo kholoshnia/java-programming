@@ -1,39 +1,71 @@
 package ru.storage.server.controller.services.parser;
 
+import com.google.inject.Inject;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Supplier;
 import ru.storage.server.controller.services.parser.exceptions.ParserException;
 import ru.storage.server.model.domain.entity.entities.worker.Status;
+import ru.storage.server.model.domain.entity.entities.worker.person.EyeColor;
+import ru.storage.server.model.domain.entity.entities.worker.person.HairColor;
 
-import java.time.ZonedDateTime;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+/** The Parser class provides methods for parsing a string into other types. */
 public final class Parser {
+  private static final Logger logger = LogManager.getLogger(Parser.class);
+
+  private static final String PARSE_INTEGER_EXCEPTION;
   private static final String PARSE_LONG_EXCEPTION;
-  private static final String PARSE_FLOAT_EXCEPTION;
   private static final String PARSE_DOUBLE_EXCEPTION;
   private static final String PARSE_STATUS_EXCEPTION;
-  private static final String PARSE_ZONED_DATE_TIME_EXCEPTION;
+  private static final String PARSE_LOCAL_DATE_TIME_EXCEPTION;
 
   static {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.Parser");
 
+    PARSE_INTEGER_EXCEPTION = resourceBundle.getString("exceptions.parseInteger");
     PARSE_LONG_EXCEPTION = resourceBundle.getString("exceptions.parseLong");
-    PARSE_FLOAT_EXCEPTION = resourceBundle.getString("exceptions.parseFloat");
     PARSE_DOUBLE_EXCEPTION = resourceBundle.getString("exceptions.parseDouble");
     PARSE_STATUS_EXCEPTION = resourceBundle.getString("exceptions.parseStatus");
-    PARSE_ZONED_DATE_TIME_EXCEPTION = resourceBundle.getString("exceptions.parseZonedDateTime");
+    PARSE_LOCAL_DATE_TIME_EXCEPTION = resourceBundle.getString("exceptions.parseLocalDateTime");
   }
 
-  private final Logger logger;
+  private final String dateTimePattern;
 
-  public Parser() {
-    logger = LogManager.getLogger(Parser.class);
+  @Inject
+  public Parser(Configuration configuration) {
+    dateTimePattern = configuration.getString("dateTimePattern");
+  }
+
+  public Integer parseInteger(String integerString) throws ParserException {
+    if (integerString == null || integerString.isEmpty()) {
+      logger.info(() -> "Got null integer.");
+      return null;
+    }
+
+    int result;
+
+    try {
+      result = Integer.parseInt(integerString);
+    } catch (NumberFormatException e) {
+      logger.info(
+          "Exception was caught during parsing integer string: \"{}\".",
+          (Supplier<?>) () -> integerString,
+          e);
+      throw new ParserException(PARSE_INTEGER_EXCEPTION, e);
+    }
+
+    return result;
   }
 
   public Long parseLong(String longString) throws ParserException {
@@ -52,27 +84,6 @@ public final class Parser {
           (Supplier<?>) () -> longString,
           e);
       throw new ParserException(PARSE_LONG_EXCEPTION, e);
-    }
-
-    return result;
-  }
-
-  public Float parseFloat(String floatString) throws ParserException {
-    if (floatString == null || floatString.isEmpty()) {
-      logger.info(() -> "Got null float.");
-      return null;
-    }
-
-    float result;
-
-    try {
-      result = Float.parseFloat(floatString);
-    } catch (NumberFormatException e) {
-      logger.info(
-          "Exception was caught during parsing float string: \"{}\".",
-          (Supplier<?>) () -> floatString,
-          e);
-      throw new ParserException(PARSE_FLOAT_EXCEPTION, e);
     }
 
     return result;
@@ -118,10 +129,10 @@ public final class Parser {
     Status[] statuses = Status.values();
     Enumeration<String> keys = resourceBundle.getKeys();
 
-    for (Status value : statuses) {
+    for (Status status : statuses) {
       while (keys.hasMoreElements()) {
         if (resourceBundle.getString(keys.nextElement()).equals(statusString)) {
-          return value;
+          return status;
         }
       }
     }
@@ -130,22 +141,89 @@ public final class Parser {
     throw new ParserException(PARSE_STATUS_EXCEPTION);
   }
 
-  public ZonedDateTime parseLocalDateTime(String zonedDateTimeString) throws ParserException {
-    if (zonedDateTimeString == null || zonedDateTimeString.isEmpty()) {
-      logger.info(() -> "Got null zoned date time.");
+  public EyeColor parseEyeColor(String eyeColorString, Locale locale) throws ParserException {
+    if (eyeColorString == null || eyeColorString.isEmpty()) {
+      logger.info(() -> "Got null eye color.");
       return null;
     }
 
-    ZonedDateTime result;
+    ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.EyeColorFormat", locale);
+
+    EyeColor[] eyeColors = EyeColor.values();
+    Enumeration<String> keys = resourceBundle.getKeys();
+
+    for (EyeColor eyeColor : eyeColors) {
+      while (keys.hasMoreElements()) {
+        if (resourceBundle.getString(keys.nextElement()).equals(eyeColorString)) {
+          return eyeColor;
+        }
+      }
+    }
+
+    logger.info("Got wrong status: {}.", () -> eyeColorString);
+    throw new ParserException(PARSE_STATUS_EXCEPTION);
+  }
+
+  public HairColor parseHairColor(String hairColorString, Locale locale) throws ParserException {
+    if (hairColorString == null || hairColorString.isEmpty()) {
+      logger.info(() -> "Got null hair color.");
+      return null;
+    }
+
+    ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.HairColorFormat", locale);
+
+    HairColor[] hairColors = HairColor.values();
+    Enumeration<String> keys = resourceBundle.getKeys();
+
+    for (HairColor hairColor : hairColors) {
+      while (keys.hasMoreElements()) {
+        if (resourceBundle.getString(keys.nextElement()).equals(hairColorString)) {
+          return hairColor;
+        }
+      }
+    }
+
+    logger.info("Got wrong status: {}.", () -> hairColorString);
+    throw new ParserException(PARSE_STATUS_EXCEPTION);
+  }
+
+  public Date parseDate(String dateString) throws ParserException {
+    if (dateString == null || dateString.isEmpty()) {
+      logger.info(() -> "Got null date.");
+      return null;
+    }
+
+    Date result;
 
     try {
-      result = ZonedDateTime.parse(zonedDateTimeString, DateTimeFormatter.ISO_DATE_TIME);
+      result = new SimpleDateFormat(dateTimePattern).parse(dateString);
+    } catch (ParseException e) {
+      logger.info(
+          "Exception was caught during parsing date string: \"{}\".",
+          (Supplier<?>) () -> dateString,
+          e);
+      throw new ParserException(PARSE_LOCAL_DATE_TIME_EXCEPTION, e);
+    }
+
+    return result;
+  }
+
+  public LocalDateTime parseLocalDateTime(String localDateTimeString) throws ParserException {
+    if (localDateTimeString == null || localDateTimeString.isEmpty()) {
+      logger.info(() -> "Got null local date time.");
+      return null;
+    }
+
+    LocalDateTime result;
+
+    try {
+      result = LocalDateTime.parse(localDateTimeString, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     } catch (DateTimeParseException e) {
       logger.info(
-          "Exception was caught during parsing zoned date time string: \"{}\".",
-          (Supplier<?>) () -> zonedDateTimeString,
+          "Exception was caught during parsing local date time string: \"{}\".",
+          (Supplier<?>) () -> localDateTimeString,
           e);
-      throw new ParserException(PARSE_ZONED_DATE_TIME_EXCEPTION, e);
+      throw new ParserException(PARSE_LOCAL_DATE_TIME_EXCEPTION, e);
     }
 
     return result;

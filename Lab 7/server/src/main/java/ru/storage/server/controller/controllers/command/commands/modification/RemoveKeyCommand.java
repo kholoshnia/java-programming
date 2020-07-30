@@ -11,23 +11,22 @@ import ru.storage.server.controller.services.parser.Parser;
 import ru.storage.server.controller.services.parser.exceptions.ParserException;
 import ru.storage.server.model.domain.entity.entities.user.User;
 import ru.storage.server.model.domain.entity.entities.worker.Worker;
-import ru.storage.server.model.domain.entity.exceptions.ValidationException;
 import ru.storage.server.model.domain.repository.Query;
 import ru.storage.server.model.domain.repository.Repository;
 import ru.storage.server.model.domain.repository.exceptions.RepositoryException;
-import ru.storage.server.model.domain.repository.repositories.workerRepository.queries.GetEqualIdWorkers;
+import ru.storage.server.model.domain.repository.repositories.workerRepository.queries.GetEqualKeyWorkers;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public final class RemoveCommand extends ModificationCommand {
-  private final String REMOVED_SUCCESSFULLY_ANSWER;
+public final class RemoveKeyCommand extends ModificationCommand {
+  private static final Logger logger = LogManager.getLogger(RemoveKeyCommand.class);
 
-  private final Logger logger;
+  private final String removedSuccessfullyAnswer;
 
-  public RemoveCommand(
+  public RemoveKeyCommand(
       Configuration configuration,
       ArgumentMediator argumentMediator,
       Map<String, String> arguments,
@@ -35,61 +34,58 @@ public final class RemoveCommand extends ModificationCommand {
       Repository<Worker> workerRepository,
       Parser parser,
       User user) {
-    super(configuration, argumentMediator, arguments, locale, workerRepository, parser, user);
-    logger = LogManager.getLogger(RemoveCommand.class);
+    super(configuration, argumentMediator, arguments, locale, user, workerRepository, parser);
 
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.RemoveCommand");
 
-    REMOVED_SUCCESSFULLY_ANSWER = resourceBundle.getString("answers.removedSuccessfully");
+    removedSuccessfullyAnswer = resourceBundle.getString("answers.removedSuccessfully");
   }
 
   @Override
   public Response executeCommand() {
-    Long id;
+    Integer key;
 
     try {
-      id = parser.parseLong(arguments.get(argumentMediator.WORKER_ID));
+      key = parser.parseInteger(arguments.get(argumentMediator.workerKey));
     } catch (ParserException e) {
-      logger.warn(() -> "Got wrong id.", e);
-      return new Response(Status.BAD_REQUEST, WRONG_ID_ANSWER);
+      logger.warn(() -> "Got wrong remove key.", e);
+      return new Response(Status.BAD_REQUEST, wrongKeyAnswer);
     }
 
-    if (id == null) {
-      logger.warn(() -> "Got null id.");
-      return new Response(Status.BAD_REQUEST, WRONG_ID_ANSWER);
+    if (key == null) {
+      logger.warn(() -> "Got null remove key.");
+      return new Response(Status.BAD_REQUEST, wrongKeyAnswer);
     }
 
-    Query<Worker> query = new GetEqualIdWorkers(id);
-    List<Worker> equalIdWorkers;
+    Query<Worker> query = new GetEqualKeyWorkers(key);
+    List<Worker> equalKeyWorkers;
 
     try {
-      equalIdWorkers = workerRepository.get(query);
+      equalKeyWorkers = workerRepository.get(query);
     } catch (RepositoryException e) {
-      logger.error("Cannot get workers which ids are equal to {}.", (Supplier<?>) () -> id, e);
+      logger.error("Cannot get workers which key is equal to {}.", (Supplier<?>) () -> key, e);
       return new Response(Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
-    if (equalIdWorkers.isEmpty()) {
-      logger.info("Worker with specified id: {} was not found.", () -> id);
-      return new Response(Status.NOT_FOUND, WORKER_NOT_FOUND_ANSWER);
+    if (equalKeyWorkers.isEmpty()) {
+      logger.info("Worker with specified key: {} was not found.", () -> key);
+      return new Response(Status.NOT_FOUND, workerNotFoundAnswer);
     }
 
-    for (Worker worker : equalIdWorkers) {
+    for (Worker worker : equalKeyWorkers) {
       try {
         if (worker.getOwnerId() == user.getId()) {
-          worker.setId(id);
-          setOwnerId(worker);
           workerRepository.delete(worker);
         } else {
-          return new Response(Status.FORBIDDEN, NOT_OWNER_ANSWER);
+          return new Response(Status.FORBIDDEN, notOwnerAnswer);
         }
-      } catch (RepositoryException | ValidationException e) {
-        logger.error("Cannot remove worker which id is equal to {}.", (Supplier<?>) () -> id, e);
+      } catch (RepositoryException e) {
+        logger.error("Cannot remove worker which key is equal to {}.", (Supplier<?>) () -> key, e);
         return new Response(Status.INTERNAL_SERVER_ERROR, e.getMessage());
       }
     }
 
     logger.info(() -> "Worker was removed.");
-    return new Response(Status.OK, REMOVED_SUCCESSFULLY_ANSWER);
+    return new Response(Status.OK, removedSuccessfullyAnswer);
   }
 }

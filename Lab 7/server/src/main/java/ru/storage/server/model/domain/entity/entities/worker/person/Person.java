@@ -14,25 +14,34 @@ public final class Person implements Cloneable, Entity {
 
   private static final String WRONG_ID_EXCEPTION;
   private static final String WRONG_OWNER_ID_EXCEPTION;
-  private static final String WRONG_NAME_EXCEPTION;
   private static final String WRONG_PASSPORT_ID_EXCEPTION;
+  private static final String WRONG_HAIR_COLOR_EXCEPTION;
+  private static final String WRONG_LOCATION_EXCEPTION;
 
   static {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.Person");
 
     WRONG_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongId");
     WRONG_OWNER_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongOwnerId");
-    WRONG_NAME_EXCEPTION = resourceBundle.getString("exceptions.wrongName");
     WRONG_PASSPORT_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongPassportId");
+    WRONG_HAIR_COLOR_EXCEPTION = resourceBundle.getString("exceptions.wrongHairColor");
+    WRONG_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.wrongLocation");
   }
 
   private long id;
   private long ownerId;
-  private String name;
   private String passportId;
+  private EyeColor eyeColor;
+  private HairColor hairColor;
   private Location location;
 
-  public Person(long id, long ownerId, String name, String passportId, Location location)
+  public Person(
+      long id,
+      long ownerId,
+      String passportId,
+      EyeColor eyeColor,
+      HairColor hairColor,
+      Location location)
       throws ValidationException {
     checkId(id);
     this.id = id;
@@ -40,12 +49,15 @@ public final class Person implements Cloneable, Entity {
     checkOwnerId(ownerId);
     this.ownerId = ownerId;
 
-    checkName(name);
-    this.name = name;
-
     checkPassportId(passportId);
     this.passportId = passportId;
 
+    this.eyeColor = eyeColor;
+
+    checkHairColor(hairColor);
+    this.hairColor = hairColor;
+
+    checkLocation(location);
     this.location = location;
   }
 
@@ -59,7 +71,7 @@ public final class Person implements Cloneable, Entity {
       locationDTO = null;
     }
 
-    return new PersonDTO(id, ownerId, name, passportId, locationDTO);
+    return new PersonDTO(id, ownerId, passportId, eyeColor, hairColor, locationDTO);
   }
 
   public final long getId() {
@@ -96,23 +108,6 @@ public final class Person implements Cloneable, Entity {
     throw new ValidationException(WRONG_OWNER_ID_EXCEPTION);
   }
 
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) throws ValidationException {
-    checkName(name);
-    this.name = name;
-  }
-
-  private void checkName(String name) throws ValidationException {
-    if (name != null && name.length() >= 2 && name.length() <= 100) {
-      return;
-    }
-
-    throw new ValidationException(WRONG_NAME_EXCEPTION);
-  }
-
   public String getPassportId() {
     return passportId;
   }
@@ -131,12 +126,46 @@ public final class Person implements Cloneable, Entity {
     throw new ValidationException(WRONG_PASSPORT_ID_EXCEPTION);
   }
 
+  public EyeColor getEyeColor() {
+    return eyeColor;
+  }
+
+  public void setEyeColor(EyeColor eyeColor) {
+    this.eyeColor = eyeColor;
+  }
+
+  public HairColor getHairColor() {
+    return hairColor;
+  }
+
+  public void setHairColor(HairColor hairColor) throws ValidationException {
+    checkHairColor(hairColor);
+    this.hairColor = hairColor;
+  }
+
+  private void checkHairColor(HairColor hairColor) throws ValidationException {
+    if (hairColor != null) {
+      return;
+    }
+
+    throw new ValidationException(WRONG_HAIR_COLOR_EXCEPTION);
+  }
+
   public Location getLocation() {
     return location;
   }
 
-  public void setLocation(Location location) {
+  public void setLocation(Location location) throws ValidationException {
+    checkLocation(location);
     this.location = location;
+  }
+
+  private void checkLocation(Location location) throws ValidationException {
+    if (location != null) {
+      return;
+    }
+
+    throw new ValidationException(WRONG_LOCATION_EXCEPTION);
   }
 
   @Override
@@ -144,20 +173,23 @@ public final class Person implements Cloneable, Entity {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Person person = (Person) o;
-    return Objects.equals(name, person.name)
+    return id == person.id
+        && ownerId == person.ownerId
         && Objects.equals(passportId, person.passportId)
+        && eyeColor == person.eyeColor
+        && hairColor == person.hairColor
         && Objects.equals(location, person.location);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, passportId, location);
+    return Objects.hash(id, ownerId, passportId, eyeColor, hairColor, location);
   }
 
   @Override
   public Person clone() {
     try {
-      return new Person(id, ownerId, name, passportId, location);
+      return new Person(id, ownerId, passportId, eyeColor, hairColor, location);
     } catch (ValidationException e) {
       throw new RuntimeException(e);
     }
@@ -166,12 +198,17 @@ public final class Person implements Cloneable, Entity {
   @Override
   public String toString() {
     return "Person{"
-        + "name='"
-        + name
-        + '\''
-        + ", passportId='"
+        + "id="
+        + id
+        + ", ownerId="
+        + ownerId
+        + ", passportID='"
         + passportId
         + '\''
+        + ", eyeColor="
+        + eyeColor
+        + ", hairColor="
+        + hairColor
         + ", location="
         + location
         + '}';

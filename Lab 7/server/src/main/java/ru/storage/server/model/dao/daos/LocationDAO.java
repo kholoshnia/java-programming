@@ -10,15 +10,14 @@ import ru.storage.server.model.source.DataSource;
 import ru.storage.server.model.source.exceptions.DataSourceException;
 
 import javax.annotation.Nonnull;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class LocationDAO implements DAO<Long, LocationDTO> {
+  private static final Logger logger = LogManager.getLogger(LocationDAO.class);
+
   private static final String SELECT_ALL = "SELECT * FROM " + LocationDTO.TABLE_NAME;
 
   private static final String SELECT_BY_ID =
@@ -30,12 +29,14 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
           + " ("
           + LocationDTO.OWNER_ID_COLUMN
           + ", "
-          + LocationDTO.ADDRESS_COLUMN
+          + LocationDTO.X_COLUMN
           + ", "
-          + LocationDTO.LATITUDE_COLUMN
+          + LocationDTO.Y_COLUMN
           + ", "
-          + LocationDTO.LONGITUDE_COLUMN
-          + ") VALUES (?, ?, ?, ?)";
+          + LocationDTO.Z_COLUMN
+          + ", "
+          + LocationDTO.NAME_COLUMN
+          + ") VALUES (?, ?, ?, ?, ?)";
 
   private static final String UPDATE =
       "UPDATE "
@@ -43,11 +44,13 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
           + " SET "
           + LocationDTO.OWNER_ID_COLUMN
           + " = ?, "
-          + LocationDTO.ADDRESS_COLUMN
+          + LocationDTO.X_COLUMN
           + " = ?, "
-          + LocationDTO.LATITUDE_COLUMN
+          + LocationDTO.Y_COLUMN
           + " = ?, "
-          + LocationDTO.LONGITUDE_COLUMN
+          + LocationDTO.Z_COLUMN
+          + " = ?, "
+          + LocationDTO.NAME_COLUMN
           + " = ? WHERE "
           + LocationDTO.ID_COLUMN
           + " = ?";
@@ -55,30 +58,31 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
   private static final String DELETE =
       "DELETE FROM " + LocationDTO.TABLE_NAME + " WHERE " + LocationDTO.ID_COLUMN + " = ?";
 
-  private static final String GET_ALL_LOCATION_EXCEPTION;
-  private static final String GET_LOCATION_BY_ID_EXCEPTION;
-  private static final String INSERT_LOCATION_EXCEPTION;
-  private static final String GET_GENERATED_LOCATION_ID;
-  private static final String UPDATE_LOCATION_EXCEPTION;
-  private static final String DELETE_LOCATION_EXCEPTION;
+  private static final String CANNOT_GET_ALL_LOCATIONS_EXCEPTION;
+  private static final String CANNOT_GET_LOCATION_BY_ID_EXCEPTION;
+  private static final String CANNOT_INSERT_LOCATION_EXCEPTION;
+  private static final String CANNOT_GET_GENERATED_LOCATION_ID_EXCEPTION;
+  private static final String CANNOT_UPDATE_LOCATION_EXCEPTION;
+  private static final String CANNOT_DELETE_LOCATION_EXCEPTION;
 
   static {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.LocationDAO");
 
-    GET_ALL_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.getAllLocations");
-    GET_LOCATION_BY_ID_EXCEPTION = resourceBundle.getString("exceptions.getLocationById");
-    INSERT_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.insertLocation");
-    GET_GENERATED_LOCATION_ID = resourceBundle.getString("exceptions.getGeneratedLocationId");
-    UPDATE_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.updateLocation");
-    DELETE_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.deleteLocation");
+    CANNOT_GET_ALL_LOCATIONS_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotGetAllLocations");
+    CANNOT_GET_LOCATION_BY_ID_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotGetLocationById");
+    CANNOT_INSERT_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.cannotInsertLocation");
+    CANNOT_GET_GENERATED_LOCATION_ID_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotGetGeneratedLocationId");
+    CANNOT_UPDATE_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.cannotUpdateLocation");
+    CANNOT_DELETE_LOCATION_EXCEPTION = resourceBundle.getString("exceptions.cannotDeleteLocation");
   }
 
-  private final Logger logger;
   private final DataSource dataSource;
 
   @Inject
   public LocationDAO(DataSource dataSource) {
-    logger = LogManager.getLogger(LocationDAO.class);
     this.dataSource = dataSource;
   }
 
@@ -94,16 +98,17 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
       while (resultSet.next()) {
         long id = resultSet.getLong(LocationDTO.ID_COLUMN);
         long ownerId = resultSet.getLong(LocationDTO.OWNER_ID_COLUMN);
-        String address = resultSet.getObject(LocationDTO.ADDRESS_COLUMN, String.class);
-        Double latitude = resultSet.getObject(LocationDTO.LATITUDE_COLUMN, Double.class);
-        Double longitude = resultSet.getObject(LocationDTO.LONGITUDE_COLUMN, Double.class);
+        Long x = resultSet.getObject(LocationDTO.X_COLUMN, Long.class);
+        long y = resultSet.getLong(LocationDTO.Y_COLUMN);
+        Double z = resultSet.getObject(LocationDTO.Z_COLUMN, Double.class);
+        String name = resultSet.getObject(LocationDTO.NAME_COLUMN, String.class);
 
-        LocationDTO location = new LocationDTO(id, ownerId, address, latitude, longitude);
-        allLocationDTOs.add(location);
+        LocationDTO locationDTO = new LocationDTO(id, ownerId, x, y, z, name);
+        allLocationDTOs.add(locationDTO);
       }
     } catch (SQLException e) {
       logger.error(() -> "Cannot get all locations.", e);
-      throw new DAOException(GET_ALL_LOCATION_EXCEPTION, e);
+      throw new DAOException(CANNOT_GET_ALL_LOCATIONS_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
@@ -124,15 +129,16 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
 
       while (resultSet.next()) {
         long ownerId = resultSet.getLong(LocationDTO.OWNER_ID_COLUMN);
-        String address = resultSet.getObject(LocationDTO.ADDRESS_COLUMN, String.class);
-        Double latitude = resultSet.getObject(LocationDTO.LATITUDE_COLUMN, Double.class);
-        Double longitude = resultSet.getObject(LocationDTO.LONGITUDE_COLUMN, Double.class);
+        Long x = resultSet.getObject(LocationDTO.X_COLUMN, Long.class);
+        long y = resultSet.getLong(LocationDTO.Y_COLUMN);
+        Double z = resultSet.getObject(LocationDTO.Z_COLUMN, Double.class);
+        String name = resultSet.getObject(LocationDTO.NAME_COLUMN, String.class);
 
-        locationDTO = new LocationDTO(id, ownerId, address, latitude, longitude);
+        locationDTO = new LocationDTO(id, ownerId, x, y, z, name);
       }
     } catch (SQLException e) {
       logger.error(() -> "Cannot get location by id.", e);
-      throw new DAOException(GET_LOCATION_BY_ID_EXCEPTION, e);
+      throw new DAOException(CANNOT_GET_LOCATION_BY_ID_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
@@ -150,9 +156,22 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
 
     try {
       preparedStatement.setLong(1, locationDTO.ownerId);
-      preparedStatement.setString(2, locationDTO.address);
-      preparedStatement.setDouble(3, locationDTO.latitude);
-      preparedStatement.setDouble(4, locationDTO.longitude);
+
+      if (locationDTO.x != null) {
+        preparedStatement.setLong(2, locationDTO.x);
+      } else {
+        preparedStatement.setNull(2, Types.BIGINT);
+      }
+
+      preparedStatement.setLong(3, locationDTO.y);
+
+      if (locationDTO.z != null) {
+        preparedStatement.setDouble(4, locationDTO.z);
+      } else {
+        preparedStatement.setDouble(4, Types.DOUBLE);
+      }
+
+      preparedStatement.setString(5, locationDTO.name);
 
       preparedStatement.execute();
 
@@ -161,11 +180,11 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
         resultId = generatedKeys.getLong(1);
       } else {
         logger.error(() -> "Cannot get generated location id.");
-        throw new DAOException(GET_GENERATED_LOCATION_ID);
+        throw new DAOException(CANNOT_GET_GENERATED_LOCATION_ID_EXCEPTION);
       }
     } catch (SQLException e) {
       logger.error(() -> "Cannot insert location.", e);
-      throw new DAOException(INSERT_LOCATION_EXCEPTION, e);
+      throw new DAOException(CANNOT_INSERT_LOCATION_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
@@ -174,9 +193,10 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
     return new LocationDTO(
         resultId,
         locationDTO.ownerId,
-        locationDTO.address,
-        locationDTO.latitude,
-        locationDTO.longitude);
+        locationDTO.x,
+        locationDTO.y,
+        locationDTO.z,
+        locationDTO.name);
   }
 
   @Override
@@ -187,16 +207,29 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
 
     try {
       preparedStatement.setLong(1, locationDTO.ownerId);
-      preparedStatement.setString(2, locationDTO.address);
-      preparedStatement.setDouble(3, locationDTO.latitude);
-      preparedStatement.setDouble(4, locationDTO.longitude);
 
-      preparedStatement.setLong(5, locationDTO.id);
+      if (locationDTO.x != null) {
+        preparedStatement.setLong(2, locationDTO.x);
+      } else {
+        preparedStatement.setNull(2, Types.BIGINT);
+      }
+
+      preparedStatement.setLong(3, locationDTO.y);
+
+      if (locationDTO.z != null) {
+        preparedStatement.setDouble(4, locationDTO.z);
+      } else {
+        preparedStatement.setDouble(4, Types.DOUBLE);
+      }
+
+      preparedStatement.setString(5, locationDTO.name);
+
+      preparedStatement.setLong(6, locationDTO.id);
 
       preparedStatement.execute();
     } catch (SQLException e) {
       logger.error(() -> "Cannot update location.", e);
-      throw new DAOException(UPDATE_LOCATION_EXCEPTION, e);
+      throw new DAOException(CANNOT_UPDATE_LOCATION_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
@@ -205,9 +238,10 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
     return new LocationDTO(
         locationDTO.id,
         locationDTO.ownerId,
-        locationDTO.address,
-        locationDTO.latitude,
-        locationDTO.longitude);
+        locationDTO.x,
+        locationDTO.y,
+        locationDTO.z,
+        locationDTO.name);
   }
 
   @Override
@@ -221,7 +255,7 @@ public class LocationDAO implements DAO<Long, LocationDTO> {
       preparedStatement.execute();
     } catch (SQLException e) {
       logger.error(() -> "Cannot delete location.", e);
-      throw new DAOException(DELETE_LOCATION_EXCEPTION, e);
+      throw new DAOException(CANNOT_DELETE_LOCATION_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }

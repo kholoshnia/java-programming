@@ -1,5 +1,6 @@
 package ru.storage.client.view.console;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jline.reader.EndOfFileException;
@@ -38,7 +39,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Terminal implements Console, ExitListener, LocaleListener {
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(Terminal.class);
+
   private final ExitManager exitManager;
   private final ServerWorker serverWorker;
   private final CommandMediator commandMediator;
@@ -55,12 +57,11 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
   private String user;
   private String login;
   private String prefix;
-  private boolean processing;
   private String token;
+  private boolean processing;
 
   private String connectedMessage;
   private String connectingMessage;
-  private String greetingsMessage;
   private String noSuchCommandMessage;
   private String emptyResponseMessage;
   private String wrongResponseMessage;
@@ -73,6 +74,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
   private String cancelException;
 
   public Terminal(
+      Configuration configuration,
       ExitManager exitManager,
       InputStream inputStream,
       OutputStream outputStream,
@@ -82,7 +84,6 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
       FormerMediator formerMediator,
       List<ResponseHandler> responseHandlers)
       throws ConsoleException {
-    logger = LogManager.getLogger(Terminal.class);
     this.exitManager = exitManager;
     exitManager.subscribe(this);
     this.serverWorker = serverWorker;
@@ -93,14 +94,15 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
     this.localeManager = localeManager;
     localeManager.subscribe(this);
     this.formerMediator = formerMediator;
-    jlineConsole = new JlineConsole(inputStream, outputStream, commandMediator);
+    jlineConsole = new JlineConsole(configuration, inputStream, outputStream, commandMediator);
     reader = jlineConsole.getLineReader();
     writer = jlineConsole.getPrintWriter();
     prompt = " ~ $ ";
-    prefix = "";
-    processing = true;
+    user = "";
     login = "";
+    prefix = "";
     token = "";
+    processing = true;
   }
 
   /**
@@ -113,9 +115,9 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
   private List<String> initAuthCommandsList() {
     return new ArrayList<String>() {
       {
-        add(commandMediator.LOGIN);
-        add(commandMediator.REGISTER);
-        add(commandMediator.EXIT);
+        add(commandMediator.login);
+        add(commandMediator.register);
+        add(commandMediator.exit);
       }
     };
   }
@@ -126,7 +128,6 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
 
     connectedMessage = resourceBundle.getString("messages.connected");
     connectingMessage = resourceBundle.getString("messages.connecting");
-    greetingsMessage = resourceBundle.getString("messages.greetings");
     noSuchCommandMessage = resourceBundle.getString("messages.noSuchCommand");
     emptyResponseMessage = resourceBundle.getString("messages.emptyResponse");
     wrongResponseMessage = resourceBundle.getString("messages.wrongResponse");
@@ -146,7 +147,6 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
   /** Processes client console */
   public void process() throws ExitingException {
     localeManager.changeLocale(Locale.getDefault());
-    writeLine(greetingsMessage);
 
     try {
       serverWorker.connect();
@@ -215,6 +215,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
    *
    * @param words user input words
    * @return new request
+   * @throws ExitingException - in case of exceptions while exiting
    */
   private Request createRequest(List<String> words) throws ExitingException {
     String command = words.get(0);
@@ -237,7 +238,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
       return null;
     }
 
-    if (command.equals(commandMediator.EXIT)) {
+    if (command.equals(commandMediator.exit)) {
       exitManager.exit();
       return null;
     }
@@ -287,13 +288,14 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
     if (token != null) {
       this.token = token;
 
-      if (login == null) {
+      if (token.isEmpty()) {
+        user = "";
+        login = "";
         prefix = "";
       } else {
+        login = user;
         prefix = user;
       }
-
-      login = user;
     }
 
     String answer = null;
@@ -333,7 +335,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
   private Response waitConnection(Request request) {
     Response response = null;
     String anim = "|/-\\";
-    int counter = 0;
+    byte counter = 0;
 
     do {
       try {
@@ -343,6 +345,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
       }
 
       counter++;
+
       if (counter > 3) {
         counter = 0;
       }
@@ -366,6 +369,11 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
     logger.info(() -> "Connected to the server.");
     writeLine(String.format("\r%s", connectedMessage));
     writeLine();
+
+    user = "";
+    login = "";
+    prefix = "";
+    token = "";
 
     return response;
   }
@@ -391,7 +399,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
     try {
       input = reader.readLine(prompt, mask);
     } catch (UserInterruptException e) {
-      input = commandMediator.EXIT;
+      input = commandMediator.exit;
     } catch (EndOfFileException e) {
       input = null;
     }
@@ -404,7 +412,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
    *
    * <p>Using the specified in the constructor output stream.
    *
-   * @param string concrete string to write
+   * @param string string to write
    */
   public void write(String string) {
     if (string == null) {
@@ -431,7 +439,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
    *
    * <p>Using the specified in the constructor output stream.
    *
-   * @param string concrete string to write
+   * @param string string to write
    * @see Terminal#write(String)
    */
   public void writeLine(String string) {
@@ -443,7 +451,7 @@ public final class Terminal implements Console, ExitListener, LocaleListener {
    * Parses string by words in a list of string. Words can be separated by spaces or can be
    * surrounded by " and ' symbols. NOTE: returns empty list if there is no words found.
    *
-   * @param string concrete string to parse
+   * @param string string to parse
    * @return list of words from string
    */
   private List<String> parse(String string) {

@@ -21,6 +21,8 @@ import java.util.ResourceBundle;
  * @see PreparedStatement
  */
 public abstract class DataSource implements ExitListener {
+  private static final Logger logger = LogManager.getLogger(DataSource.class);
+
   private static final String SETUP_CONNECTION_EXCEPTION;
   private static final String GET_PREPARED_STATEMENT_EXCEPTION;
   private static final String CLOSE_PREPARED_STATEMENT_EXCEPTION;
@@ -36,11 +38,9 @@ public abstract class DataSource implements ExitListener {
     CLOSE_CONNECTION_EXCEPTION = resourceBundle.getString("exceptions.closeConnection");
   }
 
-  private final Logger logger;
   private final Connection connection;
 
   public DataSource(String url, String user, String password) throws DataSourceException {
-    logger = LogManager.getLogger(DataSource.class);
     connection = initConnection(url, user, password);
   }
 
@@ -79,7 +79,7 @@ public abstract class DataSource implements ExitListener {
    * Returns prepared statement for specified sql statement and type.
    *
    * @param statement sql statement
-   * @param type concrete type
+   * @param type statement type
    * @return prepared statement for specified sql request and type
    * @throws DataSourceException - if preparation is incorrect
    */
@@ -105,7 +105,7 @@ public abstract class DataSource implements ExitListener {
    * <p>NOTE: all prepared statement must be closed after execution or in case of exception in
    * {@code finally} block.
    *
-   * @param preparedStatement concrete prepared statement
+   * @param preparedStatement prepared statement
    * @throws DataSourceException - in case of errors while closing prepared statement
    */
   public final void closePrepareStatement(PreparedStatement preparedStatement)
@@ -119,7 +119,7 @@ public abstract class DataSource implements ExitListener {
       }
     }
 
-    logger.debug(() -> "Statement was closed.");
+    logger.info(() -> "Statement was closed.");
   }
 
   /**

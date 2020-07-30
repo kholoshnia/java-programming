@@ -7,58 +7,64 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 public final class LocationValidator implements LocaleListener {
-  private String wrongAddressException;
-  private String wrongLatitudeException;
-  private String wrongLongitudeException;
+  private String wrongXException;
+  private String wrongYException;
+  private String wrongZException;
+  private String wrongNameException;
 
   @Override
   public void changeLocale(Locale locale) {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.LocationValidator");
 
-    wrongAddressException = resourceBundle.getString("exceptions.wrongAddress");
-    wrongLatitudeException = resourceBundle.getString("exceptions.wrongLatitude");
-    wrongLongitudeException = resourceBundle.getString("exceptions.wrongLongitude");
+    wrongXException = resourceBundle.getString("exceptions.wrongX");
+    wrongYException = resourceBundle.getString("exceptions.wrongY");
+    wrongZException = resourceBundle.getString("exceptions.wrongZ");
+    wrongNameException = resourceBundle.getString("exceptions.wrongName");
   }
 
-  public void checkAddress(String addressString) throws ValidationException {
-    if (addressString == null || addressString.length() < 10 || addressString.length() > 100) {
-      throw new ValidationException(wrongAddressException);
+  public void checkX(String xString) throws ValidationException {
+    if (xString == null || xString.isEmpty()) {
+      throw new ValidationException(wrongXException);
+    }
+
+    try {
+      Double.parseDouble(xString);
+    } catch (NumberFormatException e) {
+      throw new ValidationException(wrongXException, e);
     }
   }
 
-  public void checkLatitude(String latitudeString) throws ValidationException {
-    if (latitudeString == null || latitudeString.isEmpty()) {
+  public void checkY(String yString) throws ValidationException {
+    if (yString == null || yString.isEmpty()) {
+      throw new ValidationException(wrongYException);
+    }
+
+    try {
+      Double.parseDouble(yString);
+    } catch (NumberFormatException e) {
+      throw new ValidationException(wrongYException, e);
+    }
+  }
+
+  public void checkZ(String zString) throws ValidationException {
+    if (zString == null || zString.isEmpty()) {
+      throw new ValidationException(wrongZException);
+    }
+
+    try {
+      Double.parseDouble(zString);
+    } catch (NumberFormatException e) {
+      throw new ValidationException(wrongZException, e);
+    }
+  }
+
+  public void checkName(String nameString) throws ValidationException {
+    if (nameString == null || nameString.isEmpty()) {
       return;
     }
 
-    double latitude;
-
-    try {
-      latitude = Double.parseDouble(latitudeString);
-    } catch (NumberFormatException e) {
-      throw new ValidationException(wrongLatitudeException, e);
-    }
-
-    if (latitude < -85.0 || latitude > 85.0) {
-      throw new ValidationException(wrongLatitudeException);
-    }
-  }
-
-  public void checkLongitude(String longitudeString) throws ValidationException {
-    if (longitudeString == null || longitudeString.isEmpty()) {
-      return;
-    }
-
-    double longitude;
-
-    try {
-      longitude = Double.parseDouble(longitudeString);
-    } catch (NumberFormatException e) {
-      throw new ValidationException(wrongLongitudeException, e);
-    }
-
-    if (longitude < -180.0 || longitude > 180.0) {
-      throw new ValidationException(wrongLongitudeException);
+    if (nameString.length() > 461) {
+      throw new ValidationException(wrongNameException);
     }
   }
 }

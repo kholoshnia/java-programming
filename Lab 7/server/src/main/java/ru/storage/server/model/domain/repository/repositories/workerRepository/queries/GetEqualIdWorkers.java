@@ -4,7 +4,6 @@ import ru.storage.server.model.domain.entity.entities.worker.Worker;
 import ru.storage.server.model.domain.repository.Query;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -16,7 +15,7 @@ public final class GetEqualIdWorkers implements Query<Worker> {
   /**
    * Creates a query to get workers with the specified id.
    *
-   * @param id concrete id
+   * @param id user id
    */
   public GetEqualIdWorkers(long id) {
     this.id = id;
@@ -24,8 +23,6 @@ public final class GetEqualIdWorkers implements Query<Worker> {
 
   @Override
   public List<Worker> execute(List<Worker> workers) {
-    return workers.stream()
-        .filter(worker -> worker.getId() == id)
-        .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
+    return workers.stream().filter(worker -> worker.getId() == id).collect(Collectors.toList());
   }
 }

@@ -2,48 +2,56 @@ package ru.storage.server.controller.services.script;
 
 import ru.storage.server.model.domain.entity.entities.user.User;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Script class implements {@link Iterable}, contains necessary data for commands execution.
+ * Script class containing necessary data for commands execution.
  *
  * <p>Script semantics:
  *
  * <ul>
  *   <li>each command must start on a new line;
  *   <li>if the command requires additional arguments, the following lines must contain them in the
- *       form name:value, name:"value" or name:'value' in case of ":' symbols.
+ *       form name:value, name:"value" or name:'value' in case of spaces.
  * </ul>
  *
  * <p>List of available arguments:
  *
  * <ul>
- *   <li>id
+ *   <li>worker
+ *   <li>workerName
  *   <li>workerSalary
- *   <li>workerStatus
  *   <li>workerStartDate
  *   <li>workerEndDate
+ *   <li>workerStatus
+ *   <li>coordinates
  *   <li>coordinatesX
  *   <li>coordinatesY
- *   <li>coordinatesZ
- *   <li>personName
+ *   <li>person
  *   <li>personPassportId
- *   <li>locationAddress
- *   <li>locationLatitude
- *   <li>locationLongitude
+ *   <li>personEyeColor
+ *   <li>personHairColor
+ *   <li>location
+ *   <li>locationX
+ *   <li>locationY
+ *   <li>locationZ
+ *   <li>locationName
+ *   <li>include
  * </ul>
  */
-public final class Script implements Iterable<String> {
+public final class Script {
   private final Locale locale;
   private final User user;
   private final List<String> lines;
+
+  private int current;
 
   public Script(Locale locale, User user, List<String> lines) {
     this.locale = locale;
     this.user = user;
     this.lines = lines;
+    current = -1;
   }
 
   public Locale getLocale() {
@@ -54,8 +62,32 @@ public final class Script implements Iterable<String> {
     return user;
   }
 
+  public int getCurrent() {
+    return current;
+  }
+
+  public boolean hasNext() {
+    return current < lines.size();
+  }
+
+  public String nextLine() {
+    current++;
+
+    if (current < lines.size()) {
+      return lines.get(current);
+    }
+
+    return null;
+  }
+
+  public void back() {
+    if (current > -1) {
+      current--;
+    }
+  }
+
   @Override
-  public Iterator<String> iterator() {
-    return lines.iterator();
+  public int hashCode() {
+    return lines.stream().mapToInt(String::hashCode).sum();
   }
 }

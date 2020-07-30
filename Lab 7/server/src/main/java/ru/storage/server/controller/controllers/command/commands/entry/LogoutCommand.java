@@ -16,30 +16,29 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 public class LogoutCommand extends EntryCommand {
-  private final String LOGGED_OUT_ANSWER;
+  private static final Logger logger = LogManager.getLogger(LogoutCommand.class);
 
-  private final Logger logger;
+  private final String loggedOutAnswer;
 
   public LogoutCommand(
       Configuration configuration,
       ArgumentMediator argumentMediator,
       Map<String, String> arguments,
       Locale locale,
-      HashGenerator hashGenerator,
       Repository<User> userRepository,
+      HashGenerator hashGenerator,
       Key key) {
-    super(configuration, argumentMediator, arguments, locale, hashGenerator, userRepository, key);
-    logger = LogManager.getLogger(LogoutCommand.class);
+    super(configuration, argumentMediator, arguments, locale, userRepository, hashGenerator, key);
 
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.LogoutCommand", locale);
 
-    LOGGED_OUT_ANSWER = resourceBundle.getString("answers.loggedOut");
+    loggedOutAnswer = resourceBundle.getString("answers.loggedOut");
   }
 
   @Override
   public Response executeCommand() {
     logger.info(
         () -> "Returning unauthorized answer, user must be unauthorized on the client size.");
-    return new Response(Status.OK, LOGGED_OUT_ANSWER, "");
+    return new Response(Status.OK, loggedOutAnswer, "");
   }
 }

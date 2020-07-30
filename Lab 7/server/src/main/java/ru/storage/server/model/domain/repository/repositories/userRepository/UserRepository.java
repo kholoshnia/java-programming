@@ -26,6 +26,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @see Repository
  */
 public final class UserRepository implements Repository<User> {
+  private static final Logger logger = LogManager.getLogger(UserRepository.class);
+
   private static final String USER_NOT_FOUND_USING_DAO_EXCEPTION;
   private static final String USER_NOT_FOUND_IN_COLLECTION_EXCEPTION;
 
@@ -38,13 +40,11 @@ public final class UserRepository implements Repository<User> {
         resourceBundle.getString("exceptions.userNotFoundInCollection");
   }
 
-  private final Logger logger;
   private final DAO<String, UserDTO> userDAO;
   private final List<User> users;
 
   @Inject
   public UserRepository(@Nonnull DAO<String, UserDTO> userDAO) throws UserRepositoryException {
-    logger = LogManager.getLogger(UserRepository.class);
     this.userDAO = userDAO;
     users = initUsersList();
   }
@@ -92,7 +92,7 @@ public final class UserRepository implements Repository<User> {
 
     List<User> result = query.execute(users);
 
-    logger.debug("User query: {} was executed.", () -> query);
+    logger.info("User query: {} was executed.", () -> query);
     return result;
   }
 

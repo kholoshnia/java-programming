@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 public final class CoordinatesValidator implements LocaleListener {
   private String wrongXException;
   private String wrongYException;
-  private String wrongZException;
 
   @Override
   public void changeLocale(Locale locale) {
@@ -17,7 +16,6 @@ public final class CoordinatesValidator implements LocaleListener {
 
     wrongXException = resourceBundle.getString("exceptions.wrongX");
     wrongYException = resourceBundle.getString("exceptions.wrongY");
-    wrongZException = resourceBundle.getString("exceptions.wrongZ");
   }
 
   public void checkX(String xString) throws ValidationException {
@@ -33,7 +31,7 @@ public final class CoordinatesValidator implements LocaleListener {
       throw new ValidationException(wrongXException, e);
     }
 
-    if (x < -500.0 || x > 500.0) {
+    if (x <= -433) {
       throw new ValidationException(wrongXException);
     }
   }
@@ -51,26 +49,8 @@ public final class CoordinatesValidator implements LocaleListener {
       throw new ValidationException(wrongYException, e);
     }
 
-    if (y < -500.0 || y > 500.0) {
+    if (y <= -501.0) {
       throw new ValidationException(wrongYException);
-    }
-  }
-
-  public void checkZ(String zString) throws ValidationException {
-    if (zString == null || zString.isEmpty()) {
-      return;
-    }
-
-    double z;
-
-    try {
-      z = Double.parseDouble(zString);
-    } catch (NumberFormatException e) {
-      throw new ValidationException(wrongZException, e);
-    }
-
-    if (z < -500.0 || z > 500.0) {
-      throw new ValidationException(wrongZException);
     }
   }
 }

@@ -4,7 +4,6 @@ import ru.storage.server.model.domain.entity.entities.user.User;
 import ru.storage.server.model.domain.repository.Query;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /** Returns users collection copy. The copy contains a users with a login equal to the specified. */
@@ -14,7 +13,7 @@ public final class GetEqualsLoginUsers implements Query<User> {
   /**
    * Creates a query to get users with the specified login.
    *
-   * @param login concrete login
+   * @param login user login
    */
   public GetEqualsLoginUsers(String login) {
     this.login = login;
@@ -24,6 +23,6 @@ public final class GetEqualsLoginUsers implements Query<User> {
   public List<User> execute(List<User> users) {
     return users.stream()
         .filter(user -> user.getLogin().equals(login))
-        .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
+        .collect(Collectors.toList());
   }
 }

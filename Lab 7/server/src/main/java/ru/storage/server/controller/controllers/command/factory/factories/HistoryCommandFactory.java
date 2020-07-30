@@ -5,7 +5,6 @@ import org.apache.commons.configuration2.Configuration;
 import ru.storage.common.ArgumentMediator;
 import ru.storage.common.CommandMediator;
 import ru.storage.server.controller.controllers.command.Command;
-import ru.storage.server.controller.controllers.command.commands.history.ClearHistoryCommand;
 import ru.storage.server.controller.controllers.command.commands.history.HistoryCommand;
 import ru.storage.server.controller.controllers.command.commands.history.ShowHistoryCommand;
 import ru.storage.server.controller.controllers.command.factory.CommandFactory;
@@ -19,7 +18,10 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class HistoryCommandFactory extends CommandFactory {
+  private final Configuration configuration;
+  private final ArgumentMediator argumentMediator;
   private final History history;
+
   private final Map<String, Class<? extends HistoryCommand>> historyCommandMap;
 
   @Inject
@@ -28,7 +30,8 @@ public final class HistoryCommandFactory extends CommandFactory {
       ArgumentMediator argumentMediator,
       CommandMediator commandMediator,
       History history) {
-    super(configuration, argumentMediator);
+    this.configuration = configuration;
+    this.argumentMediator = argumentMediator;
     this.history = history;
     historyCommandMap = initHistoryCommandMap(commandMediator);
   }
@@ -37,8 +40,7 @@ public final class HistoryCommandFactory extends CommandFactory {
       CommandMediator commandMediator) {
     return new HashMap<String, Class<? extends HistoryCommand>>() {
       {
-        put(commandMediator.SHOW_HISTORY, ShowHistoryCommand.class);
-        put(commandMediator.CLEAR_HISTORY, ClearHistoryCommand.class);
+        put(commandMediator.history, ShowHistoryCommand.class);
       }
     };
   }
@@ -48,10 +50,12 @@ public final class HistoryCommandFactory extends CommandFactory {
       String command, Map<String, String> arguments, Locale locale, String login)
       throws CommandFactoryException {
     Class<? extends HistoryCommand> clazz = historyCommandMap.get(command);
+
     try {
       Constructor<? extends HistoryCommand> constructor =
           clazz.getConstructor(
               Configuration.class, ArgumentMediator.class, Map.class, Locale.class, History.class);
+
       return constructor.newInstance(configuration, argumentMediator, arguments, locale, history);
     } catch (NoSuchMethodException
         | InstantiationException

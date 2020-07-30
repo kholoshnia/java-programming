@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 public final class StatusFormatter extends StatusFormat {
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(StatusFormatter.class);
+
   private final Map<Status, String> statusMap;
 
   public StatusFormatter(Locale locale) {
-    logger = LogManager.getLogger(StatusFormatter.class);
     ResourceBundle resourceBundle = ResourceBundle.getBundle("localized.StatusFormat", locale);
     statusMap = initStatusMap(resourceBundle);
     logger.debug(() -> "Status localized map was created.");
@@ -25,7 +25,7 @@ public final class StatusFormatter extends StatusFormat {
       {
         put(Status.FIRED, resourceBundle.getString("values.fired"));
         put(Status.HIRED, resourceBundle.getString("values.hired"));
-        put(Status.PROMOTION, resourceBundle.getString("values.promotion"));
+        put(Status.RECOMMENDED_FOR_PROMOTION, resourceBundle.getString("values.promotion"));
       }
     };
   }

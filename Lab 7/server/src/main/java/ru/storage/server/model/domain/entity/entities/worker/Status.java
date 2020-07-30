@@ -5,7 +5,7 @@ import ru.storage.server.model.domain.entity.exceptions.ValidationException;
 public enum Status {
   FIRED,
   HIRED,
-  PROMOTION;
+  RECOMMENDED_FOR_PROMOTION;
 
   public static Status getStatus(String statusString) throws ValidationException {
     if (statusString == null) {

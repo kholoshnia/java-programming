@@ -12,29 +12,39 @@ import ru.storage.server.controller.controllers.argument.validator.ArgumentValid
 import ru.storage.server.controller.controllers.argument.validator.exceptions.WrongNumberException;
 import ru.storage.server.controller.controllers.argument.validator.exceptions.WrongValueException;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 public final class ArgumentController implements Controller {
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(ArgumentController.class);
+
   private final CommandMediator commandMediator;
   private final Map<String, ArgumentValidator> validatorMap;
+
+  private String noSuchCommandAnswer;
+  private String wrongArgumentsNumber;
+  private String wrongArgumentsValue;
 
   @Inject
   public ArgumentController(
       CommandMediator commandMediator, Map<String, ArgumentValidator> validatorMap) {
-    logger = LogManager.getLogger(ArgumentController.class);
     this.commandMediator = commandMediator;
     this.validatorMap = validatorMap;
   }
 
+  private void changeLocale(Locale locale) {
+    ResourceBundle resourceBundle =
+        ResourceBundle.getBundle("localized.ArgumentController", locale);
+
+    noSuchCommandAnswer = resourceBundle.getString("answers.notSuchCommand");
+    wrongArgumentsNumber = resourceBundle.getString("answers.wrongArgumentsNumber");
+    wrongArgumentsValue = resourceBundle.getString("answers.wrongArgumentsValue");
+  }
+
   @Override
   public Response handle(Request request) {
-    ResourceBundle resourceBundle =
-        ResourceBundle.getBundle("localized.ArgumentController", request.getLocale());
-    String noSuchCommandAnswer = resourceBundle.getString("answers.notSuchCommand");
-    String wrongArgumentsNumber = resourceBundle.getString("answers.wrongArgumentsNumber");
-    String wrongArgumentsValue = resourceBundle.getString("answers.wrongArgumentsValue");
+    changeLocale(request.getLocale());
 
     String command = request.getCommand();
 

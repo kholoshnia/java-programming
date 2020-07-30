@@ -13,27 +13,28 @@ public final class Location implements Cloneable, Entity {
 
   private static final String WRONG_ID_EXCEPTION;
   private static final String WRONG_OWNER_ID_EXCEPTION;
-  private static final String WRONG_ADDRESS_EXCEPTION;
-  private static final String WRONG_LATITUDE_EXCEPTION;
-  private static final String WRONG_LONGITUDE_EXCEPTION;
+  private static final String WRONG_X_EXCEPTION;
+  private static final String WRONG_Z_EXCEPTION;
+  private static final String WRONG_NAME_EXCEPTION;
 
   static {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.Location");
 
     WRONG_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongId");
     WRONG_OWNER_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongOwnerId");
-    WRONG_ADDRESS_EXCEPTION = resourceBundle.getString("exceptions.wrongAddress");
-    WRONG_LATITUDE_EXCEPTION = resourceBundle.getString("exceptions.wrongLatitude");
-    WRONG_LONGITUDE_EXCEPTION = resourceBundle.getString("exceptions.wrongLongitude");
+    WRONG_X_EXCEPTION = resourceBundle.getString("exceptions.wrongX");
+    WRONG_Z_EXCEPTION = resourceBundle.getString("exceptions.wrongZ");
+    WRONG_NAME_EXCEPTION = resourceBundle.getString("exceptions.wrongName");
   }
 
   private long id;
   private long ownerId;
-  private String address;
-  private Double latitude;
-  private Double longitude;
+  private Long x;
+  private long y;
+  private Double z;
+  private String name;
 
-  public Location(long id, long ownerId, String address, Double latitude, Double longitude)
+  public Location(long id, long ownerId, Long x, long y, Double z, String name)
       throws ValidationException {
     checkId(id);
     this.id = id;
@@ -41,19 +42,21 @@ public final class Location implements Cloneable, Entity {
     checkOwnerId(ownerId);
     this.ownerId = ownerId;
 
-    checkAddress(address);
-    this.address = address;
+    checkX(x);
+    this.x = x;
 
-    checkLatitude(latitude);
-    this.latitude = latitude;
+    this.y = y;
 
-    checkLongitude(longitude);
-    this.longitude = longitude;
+    checkZ(z);
+    this.z = z;
+
+    checkName(name);
+    this.name = name;
   }
 
   @Override
   public LocationDTO toDTO() {
-    return new LocationDTO(id, ownerId, address, latitude, longitude);
+    return new LocationDTO(id, ownerId, x, y, z, name);
   }
 
   public final long getId() {
@@ -90,55 +93,63 @@ public final class Location implements Cloneable, Entity {
     throw new ValidationException(WRONG_OWNER_ID_EXCEPTION);
   }
 
-  public String getAddress() {
-    return address;
+  public Long getX() {
+    return x;
   }
 
-  public void setAddress(String address) throws ValidationException {
-    checkAddress(address);
-    this.address = address;
+  public void setX(Long x) throws ValidationException {
+    checkX(x);
+    this.x = x;
   }
 
-  private void checkAddress(String address) throws ValidationException {
-    if (address != null && address.length() >= 10 && address.length() <= 100) {
+  private void checkX(Long x) throws ValidationException {
+    if (x != null) {
       return;
     }
 
-    throw new ValidationException(WRONG_ADDRESS_EXCEPTION);
+    throw new ValidationException(WRONG_X_EXCEPTION);
   }
 
-  public Double getLatitude() {
-    return latitude;
+  public long getY() {
+    return y;
   }
 
-  public void setLatitude(Double latitude) throws ValidationException {
-    checkLatitude(latitude);
-    this.latitude = latitude;
+  public void setY(long y) {
+    this.y = y;
   }
 
-  private void checkLatitude(Double latitude) throws ValidationException {
-    if (latitude == null || latitude >= -85.0 && latitude <= 85.0) {
+  public Double getZ() {
+    return z;
+  }
+
+  public void setZ(Double z) throws ValidationException {
+    checkZ(z);
+    this.z = z;
+  }
+
+  private void checkZ(Double z) throws ValidationException {
+    if (z != null) {
       return;
     }
 
-    throw new ValidationException(WRONG_LATITUDE_EXCEPTION);
+    throw new ValidationException(WRONG_Z_EXCEPTION);
   }
 
-  public Double getLongitude() {
-    return longitude;
+  public String getName() {
+    return name;
   }
 
-  public void setLongitude(Double longitude) throws ValidationException {
-    checkLongitude(longitude);
-    this.longitude = longitude;
+  public void setName(String name) throws ValidationException {
+    checkName(name);
+    this.name = name;
   }
 
-  private void checkLongitude(Double longitude) throws ValidationException {
-    if (longitude == null || longitude >= -180.0 && longitude <= 180.0) {
+  private void checkName(String name) throws ValidationException {
+    if (name != null && name.length() <= 461) {
       return;
     }
 
-    throw new ValidationException(WRONG_LONGITUDE_EXCEPTION);
+    throw new ValidationException(WRONG_NAME_EXCEPTION);
   }
 
   @Override
@@ -146,20 +157,23 @@ public final class Location implements Cloneable, Entity {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Location location = (Location) o;
-    return Objects.equals(address, location.address)
-        && Objects.equals(latitude, location.latitude)
-        && Objects.equals(longitude, location.longitude);
+    return id == location.id
+        && ownerId == location.ownerId
+        && y == location.y
+        && Objects.equals(x, location.x)
+        && Objects.equals(z, location.z)
+        && Objects.equals(name, location.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(address, latitude, longitude);
+    return Objects.hash(id, ownerId, x, y, z, name);
   }
 
   @Override
   public Location clone() {
     try {
-      return new Location(id, ownerId, address, latitude, longitude);
+      return new Location(id, ownerId, x, y, z, name);
     } catch (ValidationException e) {
       throw new RuntimeException(e);
     }
@@ -168,13 +182,19 @@ public final class Location implements Cloneable, Entity {
   @Override
   public String toString() {
     return "Location{"
-        + "address='"
-        + address
+        + "id="
+        + id
+        + ", ownerId="
+        + ownerId
+        + ", x="
+        + x
+        + ", y="
+        + y
+        + ", z="
+        + z
+        + ", name='"
+        + name
         + '\''
-        + ", latitude="
-        + latitude
-        + ", longitude="
-        + longitude
         + '}';
   }
 }

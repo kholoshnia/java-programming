@@ -7,51 +7,62 @@ import ru.storage.server.model.domain.entity.Entity;
 import ru.storage.server.model.domain.entity.entities.worker.person.Person;
 import ru.storage.server.model.domain.entity.exceptions.ValidationException;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
-public final class Worker implements Cloneable, Entity {
+public final class Worker implements Comparable<Worker>, Cloneable, Entity {
   public static final long DEFAULT_ID = 0L;
   public static final long DEFAULT_OWNER_ID = 0L;
+  public static final int DEFAULT_KEY = 0;
 
   private static final String WRONG_ID_EXCEPTION;
   private static final String WRONG_OWNER_ID_EXCEPTION;
+  private static final String WRONG_KEY_EXCEPTION;
+  private static final String WRONG_NAME_EXCEPTION;
+  private static final String WRONG_COORDINATES_EXCEPTION;
   private static final String WRONG_CREATION_DATE_EXCEPTION;
   private static final String WRONG_SALARY_EXCEPTION;
   private static final String WRONG_START_DATE_EXCEPTION;
-  private static final String WRONG_PERSON_EXCEPTION;
 
   static {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.Worker");
 
     WRONG_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongId");
     WRONG_OWNER_ID_EXCEPTION = resourceBundle.getString("exceptions.wrongOwnerId");
+    WRONG_KEY_EXCEPTION = resourceBundle.getString("exceptions.wrongKey");
+    WRONG_NAME_EXCEPTION = resourceBundle.getString("exceptions.wrongName");
+    WRONG_COORDINATES_EXCEPTION = resourceBundle.getString("exceptions.wrongCoordinates");
     WRONG_CREATION_DATE_EXCEPTION = resourceBundle.getString("exceptions.wrongCreationDate");
     WRONG_SALARY_EXCEPTION = resourceBundle.getString("exceptions.wrongSalary");
     WRONG_START_DATE_EXCEPTION = resourceBundle.getString("exceptions.wrongStartDate");
-    WRONG_PERSON_EXCEPTION = resourceBundle.getString("exceptions.wrongPerson");
   }
 
   private long id;
   private long ownerId;
-  private ZonedDateTime creationDate;
-  private Float salary;
-  private Status status;
-  private ZonedDateTime startDate;
-  private ZonedDateTime endDate;
+  private int key;
+  private String name;
   private Coordinates coordinates;
+  private LocalDate creationDate;
+  private double salary;
+  private Date startDate;
+  private LocalDateTime endDate;
+  private Status status;
   private Person person;
 
   public Worker(
       long id,
       long ownerId,
-      ZonedDateTime creationDate,
-      Float salary,
-      Status status,
-      ZonedDateTime startDate,
-      ZonedDateTime endDate,
+      int key,
+      String name,
       Coordinates coordinates,
+      LocalDate creationDate,
+      double salary,
+      Date startDate,
+      LocalDateTime endDate,
+      Status status,
       Person person)
       throws ValidationException {
     checkId(id);
@@ -60,22 +71,26 @@ public final class Worker implements Cloneable, Entity {
     checkOwnerId(ownerId);
     this.ownerId = ownerId;
 
+    checkKey(key);
+    this.key = key;
+
+    checkName(name);
+    this.name = name;
+
+    checkCoordinates(coordinates);
+    this.coordinates = coordinates;
+
     checkCreationDate(creationDate);
     this.creationDate = creationDate;
 
     checkSalary(salary);
     this.salary = salary;
 
-    this.status = status;
-
     checkStartDate(startDate);
     this.startDate = startDate;
 
     this.endDate = endDate;
-
-    this.coordinates = coordinates;
-
-    checkPerson(person);
+    this.status = status;
     this.person = person;
   }
 
@@ -98,7 +113,17 @@ public final class Worker implements Cloneable, Entity {
     }
 
     return new WorkerDTO(
-        id, ownerId, creationDate, salary, status, startDate, endDate, coordinatesDTO, personDTO);
+        id,
+        ownerId,
+        key,
+        name,
+        coordinatesDTO,
+        creationDate,
+        salary,
+        startDate,
+        endDate,
+        status,
+        personDTO);
   }
 
   public final long getId() {
@@ -135,16 +160,66 @@ public final class Worker implements Cloneable, Entity {
     throw new ValidationException(WRONG_OWNER_ID_EXCEPTION);
   }
 
-  public ZonedDateTime getCreationDate() {
+  public final int getKey() {
+    return key;
+  }
+
+  public final void setKey(int key) throws ValidationException {
+    checkKey(key);
+    this.key = key;
+  }
+
+  private void checkKey(int key) throws ValidationException {
+    if (key > 0 || key == DEFAULT_KEY) {
+      return;
+    }
+
+    throw new ValidationException(WRONG_KEY_EXCEPTION);
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) throws ValidationException {
+    checkName(name);
+    this.name = name;
+  }
+
+  private void checkName(String name) throws ValidationException {
+    if (name != null && !name.isEmpty()) {
+      return;
+    }
+
+    throw new ValidationException(WRONG_NAME_EXCEPTION);
+  }
+
+  public Coordinates getCoordinates() {
+    return coordinates;
+  }
+
+  public void setCoordinates(Coordinates coordinates) throws ValidationException {
+    checkCoordinates(coordinates);
+    this.coordinates = coordinates;
+  }
+
+  private void checkCoordinates(Coordinates coordinates) throws ValidationException {
+    if (coordinates != null) {
+      return;
+    }
+    throw new ValidationException(WRONG_COORDINATES_EXCEPTION);
+  }
+
+  public LocalDate getCreationDate() {
     return creationDate;
   }
 
-  public void setCreationDate(ZonedDateTime creationDate) throws ValidationException {
+  public void setCreationDate(LocalDate creationDate) throws ValidationException {
     checkCreationDate(creationDate);
     this.creationDate = creationDate;
   }
 
-  private void checkCreationDate(ZonedDateTime creationDate) throws ValidationException {
+  private void checkCreationDate(LocalDate creationDate) throws ValidationException {
     if (creationDate != null) {
       return;
     }
@@ -152,21 +227,46 @@ public final class Worker implements Cloneable, Entity {
     throw new ValidationException(WRONG_CREATION_DATE_EXCEPTION);
   }
 
-  public Float getSalary() {
+  public double getSalary() {
     return salary;
   }
 
-  public void setSalary(Float salary) throws ValidationException {
+  public void setSalary(double salary) throws ValidationException {
     checkSalary(salary);
     this.salary = salary;
   }
 
-  private void checkSalary(Float salary) throws ValidationException {
-    if (salary != null && salary > 0.0) {
+  private void checkSalary(double salary) throws ValidationException {
+    if (salary > 0.0) {
       return;
     }
 
     throw new ValidationException(WRONG_SALARY_EXCEPTION);
+  }
+
+  public Date getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(Date startDate) throws ValidationException {
+    checkStartDate(startDate);
+    this.startDate = startDate;
+  }
+
+  private void checkStartDate(Date startDate) throws ValidationException {
+    if (startDate != null) {
+      return;
+    }
+
+    throw new ValidationException(WRONG_START_DATE_EXCEPTION);
+  }
+
+  public LocalDateTime getEndDate() {
+    return endDate;
+  }
+
+  public void setEndDate(LocalDateTime endDate) {
+    this.endDate = endDate;
   }
 
   public Status getStatus() {
@@ -177,54 +277,17 @@ public final class Worker implements Cloneable, Entity {
     this.status = status;
   }
 
-  public ZonedDateTime getStartDate() {
-    return startDate;
-  }
-
-  public void setStartDate(ZonedDateTime startDate) throws ValidationException {
-    checkStartDate(startDate);
-    this.startDate = startDate;
-  }
-
-  private void checkStartDate(ZonedDateTime startDate) throws ValidationException {
-    if (startDate != null) {
-      return;
-    }
-
-    throw new ValidationException(WRONG_START_DATE_EXCEPTION);
-  }
-
-  public ZonedDateTime getEndDate() {
-    return endDate;
-  }
-
-  public void setEndDate(ZonedDateTime endDate) {
-    this.endDate = endDate;
-  }
-
-  public Coordinates getCoordinates() {
-    return coordinates;
-  }
-
-  public void setCoordinates(Coordinates coordinates) {
-    this.coordinates = coordinates;
-  }
-
   public Person getPerson() {
     return person;
   }
 
-  public void setPerson(Person person) throws ValidationException {
-    checkPerson(person);
+  public void setPerson(Person person) {
     this.person = person;
   }
 
-  private void checkPerson(Person person) throws ValidationException {
-    if (person != null) {
-      return;
-    }
-
-    throw new ValidationException(WRONG_PERSON_EXCEPTION);
+  @Override
+  public int compareTo(Worker worker) {
+    return Double.compare(salary, worker.salary);
   }
 
   @Override
@@ -232,24 +295,50 @@ public final class Worker implements Cloneable, Entity {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Worker worker = (Worker) o;
-    return Objects.equals(salary, worker.salary)
-        && status == worker.status
+    return id == worker.id
+        && ownerId == worker.ownerId
+        && key == worker.key
+        && Double.compare(worker.salary, salary) == 0
+        && Objects.equals(name, worker.name)
+        && Objects.equals(coordinates, worker.coordinates)
+        && Objects.equals(creationDate, worker.creationDate)
         && Objects.equals(startDate, worker.startDate)
         && Objects.equals(endDate, worker.endDate)
-        && Objects.equals(coordinates, worker.coordinates)
+        && status == worker.status
         && Objects.equals(person, worker.person);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(salary, status, startDate, endDate, coordinates, person);
+    return Objects.hash(
+        id,
+        ownerId,
+        key,
+        name,
+        coordinates,
+        creationDate,
+        salary,
+        startDate,
+        endDate,
+        status,
+        person);
   }
 
   @Override
   public Worker clone() {
     try {
       return new Worker(
-          id, ownerId, creationDate, salary, status, startDate, endDate, coordinates, person);
+          id,
+          ownerId,
+          key,
+          name,
+          coordinates,
+          creationDate,
+          salary,
+          startDate,
+          endDate,
+          status,
+          person);
     } catch (ValidationException e) {
       throw new RuntimeException(e);
     }
@@ -258,16 +347,27 @@ public final class Worker implements Cloneable, Entity {
   @Override
   public String toString() {
     return "Worker{"
-        + "salary="
+        + "id="
+        + id
+        + ", ownerId="
+        + ownerId
+        + ", key="
+        + key
+        + ", name='"
+        + name
+        + '\''
+        + ", coordinates="
+        + coordinates
+        + ", creationDate="
+        + creationDate
+        + ", salary="
         + salary
-        + ", status="
-        + status
         + ", startDate="
         + startDate
         + ", endDate="
         + endDate
-        + ", coordinates="
-        + coordinates
+        + ", status="
+        + status
         + ", person="
         + person
         + '}';

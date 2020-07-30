@@ -27,12 +27,10 @@ public final class Coordinates implements Cloneable, Entity {
 
   private long id;
   private long ownerId;
-  private Double x;
+  private double x;
   private Double y;
-  private Double z;
 
-  public Coordinates(long id, long ownerId, Double x, Double y, Double z)
-      throws ValidationException {
+  public Coordinates(long id, long ownerId, double x, Double y) throws ValidationException {
     checkId(id);
     this.id = id;
 
@@ -44,13 +42,11 @@ public final class Coordinates implements Cloneable, Entity {
 
     checkY(y);
     this.y = y;
-
-    this.z = z;
   }
 
   @Override
   public CoordinatesDTO toDTO() {
-    return new CoordinatesDTO(id, ownerId, x, y, z);
+    return new CoordinatesDTO(id, ownerId, x, y);
   }
 
   public final long getId() {
@@ -87,17 +83,17 @@ public final class Coordinates implements Cloneable, Entity {
     throw new ValidationException(WRONG_OWNER_ID_EXCEPTION);
   }
 
-  public Double getX() {
+  public double getX() {
     return x;
   }
 
-  public void setX(Double x) throws ValidationException {
+  public void setX(double x) throws ValidationException {
     checkX(x);
     this.x = x;
   }
 
-  private void checkX(Double x) throws ValidationException {
-    if (x != null && x >= -500.0 && x <= 500.0) {
+  private void checkX(double x) throws ValidationException {
+    if (x > -433.0) {
       return;
     }
 
@@ -114,19 +110,11 @@ public final class Coordinates implements Cloneable, Entity {
   }
 
   private void checkY(Double y) throws ValidationException {
-    if (y != null && y >= -500.0 && y <= 500.0) {
+    if (y != null && y > -501.0) {
       return;
     }
 
     throw new ValidationException(WRONG_Y_EXCEPTION);
-  }
-
-  public Double getZ() {
-    return z;
-  }
-
-  public void setZ(Double z) {
-    this.z = z;
   }
 
   @Override
@@ -134,18 +122,21 @@ public final class Coordinates implements Cloneable, Entity {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Coordinates that = (Coordinates) o;
-    return Objects.equals(x, that.x) && Objects.equals(y, that.y) && Objects.equals(z, that.z);
+    return id == that.id
+        && ownerId == that.ownerId
+        && Double.compare(that.x, x) == 0
+        && Objects.equals(y, that.y);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(x, y, z);
+    return Objects.hash(id, ownerId, x, y);
   }
 
   @Override
   public Coordinates clone() {
     try {
-      return new Coordinates(id, ownerId, x, y, z);
+      return new Coordinates(id, ownerId, x, y);
     } catch (ValidationException e) {
       throw new RuntimeException(e);
     }
@@ -153,6 +144,6 @@ public final class Coordinates implements Cloneable, Entity {
 
   @Override
   public String toString() {
-    return "CoordinatesDAO{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
+    return "Coordinates{" + "id=" + id + ", ownerId=" + ownerId + ", x=" + x + ", y=" + y + '}';
   }
 }

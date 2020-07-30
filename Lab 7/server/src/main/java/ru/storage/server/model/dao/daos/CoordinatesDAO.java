@@ -10,15 +10,14 @@ import ru.storage.server.model.source.DataSource;
 import ru.storage.server.model.source.exceptions.DataSourceException;
 
 import javax.annotation.Nonnull;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
+  private static final Logger logger = LogManager.getLogger(CoordinatesDAO.class);
+
   private static final String SELECT_ALL = "SELECT * FROM " + CoordinatesDTO.TABLE_NAME;
 
   private static final String SELECT_BY_ID =
@@ -33,9 +32,7 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
           + CoordinatesDTO.X_COLUMN
           + ", "
           + CoordinatesDTO.Y_COLUMN
-          + ", "
-          + CoordinatesDTO.Z_COLUMN
-          + ") VALUES (?, ?, ?, ?)";
+          + ") VALUES (?, ?, ?)";
 
   private static final String UPDATE =
       "UPDATE "
@@ -46,8 +43,6 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
           + CoordinatesDTO.X_COLUMN
           + " = ?, "
           + CoordinatesDTO.Y_COLUMN
-          + " = ?, "
-          + CoordinatesDTO.Z_COLUMN
           + " = ? WHERE "
           + CoordinatesDTO.ID_COLUMN
           + " = ?";
@@ -55,30 +50,34 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
   private static final String DELETE =
       "DELETE FROM " + CoordinatesDTO.TABLE_NAME + " WHERE " + CoordinatesDTO.ID_COLUMN + " = ?";
 
-  private static final String GET_ALL_COORDINATES_EXCEPTION;
-  private static final String GET_COORDINATES_BY_ID_EXCEPTION;
-  private static final String INSERT_COORDINATES_EXCEPTION;
-  private static final String GET_GENERATED_COORDINATES_ID;
-  private static final String UPDATE_COORDINATES_EXCEPTION;
-  private static final String DELETE_COORDINATES_EXCEPTION;
+  private static final String CANNOT_GET_ALL_COORDINATES_EXCEPTION;
+  private static final String CANNOT_GET_COORDINATES_BY_ID_EXCEPTION;
+  private static final String CANNOT_INSERT_COORDINATES_EXCEPTION;
+  private static final String CANNOT_GET_GENERATED_COORDINATES_ID_EXCEPTION;
+  private static final String CANNOT_UPDATE_COORDINATES_EXCEPTION;
+  private static final String CANNOT_DELETE_COORDINATES_EXCEPTION;
 
   static {
     ResourceBundle resourceBundle = ResourceBundle.getBundle("internal.CoordinatesDAO");
 
-    GET_ALL_COORDINATES_EXCEPTION = resourceBundle.getString("exceptions.getAllCoordinates");
-    GET_COORDINATES_BY_ID_EXCEPTION = resourceBundle.getString("exceptions.getCoordinatesById");
-    INSERT_COORDINATES_EXCEPTION = resourceBundle.getString("exceptions.insertCoordinates");
-    GET_GENERATED_COORDINATES_ID = resourceBundle.getString("exceptions.getGeneratedCoordinatesId");
-    UPDATE_COORDINATES_EXCEPTION = resourceBundle.getString("exceptions.updateCoordinates");
-    DELETE_COORDINATES_EXCEPTION = resourceBundle.getString("exceptions.deleteCoordinates");
+    CANNOT_GET_ALL_COORDINATES_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotGetAllCoordinates");
+    CANNOT_GET_COORDINATES_BY_ID_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotGetCoordinatesById");
+    CANNOT_INSERT_COORDINATES_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotInsertCoordinates");
+    CANNOT_GET_GENERATED_COORDINATES_ID_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotGetGeneratedCoordinatesId");
+    CANNOT_UPDATE_COORDINATES_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotUpdateCoordinates");
+    CANNOT_DELETE_COORDINATES_EXCEPTION =
+        resourceBundle.getString("exceptions.cannotDeleteCoordinates");
   }
 
-  private final Logger logger;
   private final DataSource dataSource;
 
   @Inject
   public CoordinatesDAO(DataSource dataSource) {
-    logger = LogManager.getLogger(CoordinatesDAO.class);
     this.dataSource = dataSource;
   }
 
@@ -94,16 +93,15 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
       while (resultSet.next()) {
         long id = resultSet.getLong(CoordinatesDTO.ID_COLUMN);
         long ownerId = resultSet.getLong(CoordinatesDTO.OWNER_ID_COLUMN);
-        Double x = resultSet.getObject(CoordinatesDTO.X_COLUMN, Double.class);
+        double x = resultSet.getDouble(CoordinatesDTO.X_COLUMN);
         Double y = resultSet.getObject(CoordinatesDTO.Y_COLUMN, Double.class);
-        Double z = resultSet.getObject(CoordinatesDTO.Z_COLUMN, Double.class);
 
-        CoordinatesDTO coordinatesDTO = new CoordinatesDTO(id, ownerId, x, y, z);
+        CoordinatesDTO coordinatesDTO = new CoordinatesDTO(id, ownerId, x, y);
         allCoordinateDTOs.add(coordinatesDTO);
       }
     } catch (SQLException e) {
       logger.error(() -> "Cannot get all coordinates.", e);
-      throw new DAOException(GET_ALL_COORDINATES_EXCEPTION, e);
+      throw new DAOException(CANNOT_GET_ALL_COORDINATES_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
@@ -124,15 +122,14 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
 
       while (resultSet.next()) {
         long ownerId = resultSet.getLong(CoordinatesDTO.OWNER_ID_COLUMN);
-        Double x = resultSet.getObject(CoordinatesDTO.X_COLUMN, Double.class);
+        double x = resultSet.getDouble(CoordinatesDTO.X_COLUMN);
         Double y = resultSet.getObject(CoordinatesDTO.Y_COLUMN, Double.class);
-        Double z = resultSet.getObject(CoordinatesDTO.Z_COLUMN, Double.class);
 
-        coordinatesDTO = new CoordinatesDTO(id, ownerId, x, y, z);
+        coordinatesDTO = new CoordinatesDTO(id, ownerId, x, y);
       }
     } catch (SQLException e) {
       logger.error(() -> "Cannot get coordinates by id.", e);
-      throw new DAOException(GET_COORDINATES_BY_ID_EXCEPTION, e);
+      throw new DAOException(CANNOT_GET_COORDINATES_BY_ID_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
@@ -151,8 +148,12 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
     try {
       preparedStatement.setDouble(1, coordinatesDTO.ownerId);
       preparedStatement.setDouble(2, coordinatesDTO.x);
-      preparedStatement.setDouble(3, coordinatesDTO.y);
-      preparedStatement.setDouble(4, coordinatesDTO.z);
+
+      if (coordinatesDTO.y != null) {
+        preparedStatement.setDouble(3, coordinatesDTO.y);
+      } else {
+        preparedStatement.setNull(3, Types.DOUBLE);
+      }
 
       preparedStatement.execute();
 
@@ -161,18 +162,17 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
         resultId = generatedKeys.getLong(1);
       } else {
         logger.error(() -> "Cannot get generated coordinates id.");
-        throw new DAOException(GET_GENERATED_COORDINATES_ID);
+        throw new DAOException(CANNOT_GET_GENERATED_COORDINATES_ID_EXCEPTION);
       }
     } catch (SQLException e) {
       logger.error(() -> "Cannot insert coordinates.", e);
-      throw new DAOException(INSERT_COORDINATES_EXCEPTION, e);
+      throw new DAOException(CANNOT_INSERT_COORDINATES_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
 
     logger.info(() -> "Coordinates were inserted.");
-    return new CoordinatesDTO(
-        resultId, coordinatesDTO.ownerId, coordinatesDTO.x, coordinatesDTO.y, coordinatesDTO.z);
+    return new CoordinatesDTO(resultId, coordinatesDTO.ownerId, coordinatesDTO.x, coordinatesDTO.y);
   }
 
   @Override
@@ -184,26 +184,26 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
     try {
       preparedStatement.setDouble(1, coordinatesDTO.ownerId);
       preparedStatement.setDouble(2, coordinatesDTO.x);
-      preparedStatement.setDouble(3, coordinatesDTO.y);
-      preparedStatement.setDouble(4, coordinatesDTO.z);
 
-      preparedStatement.setLong(5, coordinatesDTO.id);
+      if (coordinatesDTO.y != null) {
+        preparedStatement.setDouble(3, coordinatesDTO.y);
+      } else {
+        preparedStatement.setNull(3, Types.DOUBLE);
+      }
+
+      preparedStatement.setLong(4, coordinatesDTO.id);
 
       preparedStatement.execute();
     } catch (SQLException e) {
       logger.error(() -> "Cannot update coordinates.", e);
-      throw new DAOException(UPDATE_COORDINATES_EXCEPTION, e);
+      throw new DAOException(CANNOT_UPDATE_COORDINATES_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
 
     logger.info(() -> "Coordinates were updated.");
     return new CoordinatesDTO(
-        coordinatesDTO.id,
-        coordinatesDTO.ownerId,
-        coordinatesDTO.x,
-        coordinatesDTO.y,
-        coordinatesDTO.z);
+        coordinatesDTO.id, coordinatesDTO.ownerId, coordinatesDTO.x, coordinatesDTO.y);
   }
 
   @Override
@@ -218,7 +218,7 @@ public class CoordinatesDAO implements DAO<Long, CoordinatesDTO> {
       preparedStatement.execute();
     } catch (SQLException e) {
       logger.error(() -> "Cannot delete coordinates.", e);
-      throw new DAOException(DELETE_COORDINATES_EXCEPTION, e);
+      throw new DAOException(CANNOT_DELETE_COORDINATES_EXCEPTION, e);
     } finally {
       dataSource.closePrepareStatement(preparedStatement);
     }
