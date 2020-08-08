@@ -1,0 +1,117 @@
+help
+
+insert 123
+worker:include
+    workerName:20
+    workerSalary:20
+    coordinates:include
+        coordinatesX:20
+        coordinatesY:20
+    workerStartDate: 20-12-2020 20:20:20
+    workerEndDate: 2020-07-29T17:49:12.831
+    workerStatus:fired
+    person:include
+        personPassportId:123123 12313123123123
+        personEyeColor:black
+        personHairColor:black
+        location:include
+            locationX:20
+            locationY:30
+            locationZ:50
+            locationName:St. Petersburg
+
+show
+info
+
+replace_if_lower 123
+worker:include
+workerName:20
+workerSalary:10
+coordinates:include
+coordinatesX:20
+    coordinatesY :           20
+workerStartDate: 20-12-2020 20:20:20
+workerEndDate: 2020-07-29T17:49:12.831
+workerStatus:fired
+
+show
+info
+
+remove_lower
+worker:include
+workerName:20
+workerSalary:5
+coordinates:include
+coordinatesX:20
+    coordinatesY :           20
+workerStartDate: 20-12-2020 20:20:20
+workerEndDate: 2020-07-29T17:49:12.831
+workerStatus:fired
+
+show
+info
+
+insert 123
+worker:include
+    workerName:20
+    workerSalary:10
+    coordinates:include
+        coordinatesX:20
+        coordinatesY:20
+    workerStartDate: 20-12-2020 20:20:20
+    workerEndDate: 2020-07-29T17:49:12.831
+    workerStatus:fired
+    person:include
+        personPassportId:123123 12313123123123
+        personEyeColor:black
+        personHairColor:black
+        location:include
+            locationX:20
+            locationY:30
+            locationZ:50
+            locationName:St. Petersburg
+
+insert 1234
+worker:include
+    workerName:202
+    workerSalary:105
+    coordinates:include
+        coordinatesX:20
+        coordinatesY:20
+    workerStartDate: 20-12-2020 20:20:20
+    workerEndDate: 2020-07-29T17:49:12.831
+    workerStatus:fired
+    person:include
+        personPassportId:123123 12313123123123
+        personEyeColor:black
+        personHairColor:black
+        location:include
+            locationX:20
+            locationY:30
+            locationZ:50
+            locationName:St. Petersburg
+
+insert 12345
+worker:include
+    workerName:2025
+    workerSalary:101
+    coordinates:include
+        coordinatesX:20
+        coordinatesY:20
+    workerStartDate: 20-12-2020 20:20:20
+    workerEndDate: 2020-07-29T17:49:12.831
+    workerStatus:fired
+    person:include
+        personPassportId:123123 12313123123123
+        personEyeColor:black
+        personHairColor:black
+        location:include
+            locationX:20
+            locationY:30
+            locationZ:50
+            locationName:St. Petersburg
+
+print_ascending
+min_by_name
+count_less_than_start_date '20-12-2025 20:20:20'
+history
