@@ -8,7 +8,7 @@ import java.util.Locale;
 /**
  * Script class containing necessary data for commands execution.
  *
- * <p>Script semantics:
+ * <p>Script syntax:
  *
  * <ul>
  *   <li>each command must start on a new line;
